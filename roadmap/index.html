@@ -564,24 +564,24 @@
       <span>／</span>
       <span>有備而來 · Bond for the Future</span>
       <span>／</span>
-      <span>2026-08-05</span>
+      <span>2026-08-06</span>
     </div>
     <h1>工程藍圖與進度</h1>
     <p class="standfirst">
       把白皮書第 5 章的「小密封罐」拆成可施工的模組：資料可驗、本人可驗、離線驗證、驗證者端、互通。
       本頁追蹤每個模組的真實狀態——包含還沒開始的，以及還沒解決的。
     </p>
-    <span class="draft-flag">草案 v0.2 · 2026-08-05 更新：TW FidO 測試憑證已到位</span>
+    <span class="draft-flag">草案 v0.3 · 2026-08-06 更新：M0 工程基盤已合併、CI 綠燈</span>
   </header>
 
   <dl class="stats">
     <div class="stat stat--ok">
       <dt>已完成</dt>
-      <dd>2 <small>／ 30 項工作</small></dd>
+      <dd>7 <small>／ 30 項工作</small></dd>
     </div>
     <div class="stat">
       <dt>整體進度</dt>
-      <dd>10<small>%</small></dd>
+      <dd>28<small>%</small></dd>
     </div>
     <div class="stat stat--ok">
       <dt>受阻</dt>
@@ -612,14 +612,19 @@
       </p>
     </div>
     <div class="blocker">
-      <h3>現在的路障：這台 Mac 還沒有 Xcode，而且空間不夠</h3>
+      <h3>現在的路障：Xcode 裝不起來，因為這台跑的是 macOS 27 beta</h3>
       <p>
-        目前只有 Command Line Tools。PSE 範例 App 的部署目標是 iOS 26，需要 Xcode 26 以上；
-        可用磁碟空間 <strong>13 GiB</strong>，Xcode 裝完約需 15 GiB＋。<strong>要先清空間。</strong>
+        空間已清出（79 GiB 可用），但 App Store 的 Xcode 下載<strong>是死的、不是慢的</strong>——
+        <code>storedownloadd</code> 根本沒在跑。連 <code>brew</code> 也失敗，它要「Command Line Tools for Xcode 27.0」；
+        <code>softwareupdate</code> 則只提供 macOS 27 Beta 4。
       </p>
       <p>
-        好消息是有一段完全不需要 Xcode：用 node 直接跑完 TW FidO 簽章流程、驗證憑證是活的。
-        建議先做這步再去下載 Xcode——萬一憑證有問題，不會白等一小時。
+        App Store 供應的是正式版 Xcode，在 beta OS 上卡住是常態。
+        <strong>解法是改從 developer.apple.com 直接下載 .xip</strong>，瀏覽器可續傳，不依賴那個已經死掉的 daemon。
+      </p>
+      <p>
+        但這不等於停工：Command Line Tools 內含 <strong>Swift 6.2</strong>，純 Swift 邏輯可以單獨編譯驗證；
+        CI 在 GitHub 的 macOS runner 上跑，本機沒有 Xcode 也照樣有建置與測試驗收。M0 就是這樣完成的。
       </p>
     </div>
   </section>
@@ -689,43 +694,43 @@
         <div class="ms__body">
           <div class="ms__head">
             <h3 class="ms__title">工程基盤</h3>
-            <span class="ms__meta">豆泥 · 無相依 · 可立即開工</span>
+            <span class="ms__meta">豆泥 · 大致完成</span>
           </div>
           <p class="ms__goal">讓這個 repo 具備承接後續五個里程碑的條件。小、雜、但每一項都會在後面擋路。</p>
           <div class="meter">
-            <div class="meter__bar"><div class="meter__fill" style="width:0%"></div></div>
-            <span class="meter__pct">0%</span>
+            <div class="meter__bar"><div class="meter__fill" style="width:75%"></div></div>
+            <span class="meter__pct">75%</span>
           </div>
           <ul class="tasks">
             <li>
-              <span class="chip chip--todo">待辦</span>
-              <span class="t-name">清空間並安裝 Xcode 26+</span>
-              <span class="t-note">開發機目前只有 Command Line Tools，可用空間 13 GiB。這是眼下唯一真正擋住 iOS 開工的東西。</span>
+              <span class="chip chip--partial">半完成</span>
+              <span class="t-name">清空間並安裝 Xcode</span>
+              <span class="t-note">空間已清出（79 GiB 可用）。Xcode 仍未裝——根因是本機跑 macOS 27 beta，App Store 版下載會卡死，須改從 developer.apple.com 直接下載 .xip。</span>
             </li>
             <li>
-              <span class="chip chip--todo">待辦</span>
+              <span class="chip chip--done">已完成</span>
               <span class="t-name">補上開源授權條款</span>
-              <span class="t-note">公開 repo 目前沒有 LICENSE，法律上等同保留所有權利——與 5.3「釋出皮夾 SDK、Verifier SDK、ZK 電路範本」的目標直接衝突。</span>
+              <span class="t-note">Apache-2.0（相容 MIT 相依、對齊上游 mopro、含專利授權）。⚠️ 但 <code>openac-rsa-x509-swift</code>、<code>go-zkid-verifier</code>、<code>moica-revocation-smt</code> 上游都還沒有授權條款，正式版依賴前須請 PSE 補上。</span>
             </li>
             <li>
-              <span class="chip chip--todo">待辦</span>
+              <span class="chip chip--partial">半完成</span>
               <span class="t-name">Bundle ID 與簽章團隊轉組織</span>
-              <span class="t-note">目前是 <code>org.denkeni.backupTW</code> 與個人 Development Team。TestFlight 要掛在 bonds-tw 名下，需要組織 Apple Developer 帳號（要 D-U-N-S，前置期長，與 SP 申請一起送）。</span>
+              <span class="t-note">Bundle ID 已改為 <code>tw.bonds.*</code>。組織 Apple Developer 帳號仍未申請（要 D-U-N-S，與專屬 SP 一起送）。簽章團隊刻意留給各開發者本機設定。</span>
             </li>
             <li>
-              <span class="chip chip--todo">待辦</span>
+              <span class="chip chip--done">已完成</span>
               <span class="t-name">部署目標拉到 iOS 16+</span>
-              <span class="t-note">專案裡混著 14.5 與 18.5 兩個值；<code>OpenACSwift</code> 要求 iOS 16+ 與 Swift 6 tools，先統一才能加依賴。</span>
+              <span class="t-note">原本依 target 混著 14.5 與 18.5，已統一為 16.0——<code>OpenACSwift</code> 的下限，同時保留最大裝置涵蓋率。</span>
             </li>
             <li>
-              <span class="chip chip--todo">待辦</span>
+              <span class="chip chip--done">已完成</span>
               <span class="t-name">修掉 PDF 解析的崩潰路徑</span>
-              <span class="t-note"><code>MyDataWebViewController.parseUnencryptedPDF</code> 直接用固定索引取 <code>parts[1]</code>、<code>parts[6]</code>、<code>7...lastIndex</code>；格式一變就是陣列越界閃退，不是回傳 nil。這是目前唯一能跑的功能，值得先護住。</span>
+              <span class="t-note">改為依標籤尋找欄位、容忍全形半形冒號、找不到退成 nil。實測舊版在空字串／單行／無地址區塊三種輸入都 SIGTRAP 閃退，新版全數通過。</span>
             </li>
             <li>
-              <span class="chip chip--todo">待辦</span>
+              <span class="chip chip--done">已完成</span>
               <span class="t-name">CI：build + test</span>
-              <span class="t-note"><code>bond-tw-app</code> 已經有可抄的 workflow，主幹 repo 反而沒有。</span>
+              <span class="t-note">本機沒有可用 Xcode，CI 是目前唯一能驗證「編不編得起來」的東西。已在 macOS runner 跑綠：BUILD SUCCEEDED、9 項測試通過。模擬器動態挑選，不寫死裝置名稱。</span>
             </li>
           </ul>
         </div>
@@ -741,8 +746,8 @@
           </div>
           <p class="ms__goal">把「下載完就丟掉」的身分欄位，變成<em>存得住、簽得了、拿得出來</em>的可驗證憑證。</p>
           <div class="meter">
-            <div class="meter__bar"><div class="meter__fill" style="width:20%"></div></div>
-            <span class="meter__pct">20%</span>
+            <div class="meter__bar"><div class="meter__fill" style="width:40%"></div></div>
+            <span class="meter__pct">40%</span>
           </div>
           <ul class="tasks">
             <li>
@@ -751,9 +756,9 @@
               <span class="t-note">WKWebView 導至 <code>API.idPhotoRev</code>、接手下載、解 zip、以身分證字號解密 PDF、抽出五個欄位。這是目前全專案唯一真正跑通的政府整合。</span>
             </li>
             <li>
-              <span class="chip chip--partial">半成品</span>
+              <span class="chip chip--done">已完成</span>
               <span class="t-name">欄位解析健壯化</span>
-              <span class="t-note">改成具名欄位比對 + 容錯，並補上 golden-file 測試（多行地址那個 commit 已經是第一次被格式咬到了）。</span>
+              <span class="t-note">已改為具名欄位比對＋容錯，並補上 8 組測試（含多行地址、欄位順序調換、全形冒號、三種原本會閃退的短文件）。</span>
             </li>
             <li>
               <span class="chip chip--todo">待辦</span>
@@ -1090,7 +1095,7 @@
   </section>
 
   <footer>
-    <div>本頁狀態為 2026-08-05 的實地盤點結果，隨施工進度更新。全部里程碑負責人：豆泥。</div>
+    <div>本頁狀態為 2026-08-06 的實地盤點結果，隨施工進度更新。全部里程碑負責人：豆泥。</div>
     <div>依據：<a href="https://blog.bonds.tw/litepaper/#50">《有備而來》白皮書第 5 章</a>、《行動自然人憑證應用程式介面規格書 v2.9》．上游 ZK 元件：<a href="https://github.com/privacy-ethereum/ZK-based-Proof-of-Personhood">privacy-ethereum/ZK-based-Proof-of-Personhood</a>．前案：<a href="https://github.com/thematters/zkid-personhood">thematters/zkid-personhood</a></div>
   </footer>
 
