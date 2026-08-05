@@ -571,7 +571,7 @@
       把白皮書第 5 章的「小密封罐」拆成可施工的模組：資料可驗、本人可驗、離線驗證、驗證者端、互通。
       本頁追蹤每個模組的真實狀態——包含還沒開始的，以及還沒解決的。
     </p>
-    <span class="draft-flag">草案 v0.3 · 2026-08-06 更新：M0 工程基盤已合併、CI 綠燈</span>
+    <span class="draft-flag">草案 v0.4 · 2026-08-06 更新：TW FidO 簽章 helper 已併入（推播模式）</span>
   </header>
 
   <dl class="stats">
@@ -801,7 +801,7 @@
             <li>
               <span class="chip chip--partial">進行中</span>
               <span class="t-name">以 node helper 驗證憑證可用</span>
-              <span class="t-note">不需要 Xcode，今天就能做。<code>sp_checksum</code> 算法已對照規格書驗證：SHA-256 hex → AES-256-GCM → <code>IV(12B)‖密文(64B)‖tag(16B)</code>，共 184 個 hex 字元。</span>
+              <span class="t-note">helper 已寫好並併入 <code>scripts/twfido-sign.mjs</code>，request 內容以本機 echo server 逐欄驗過。尚未實際完成一次簽章。<strong>坑：</strong>沿用的 Matters helper 寫死 <code>op_mode=APP2APP</code>，該模式不推播、只給深連結，從 terminal 跑 App 永遠不會有動靜；改用 SP-API-ATH-03 推播模式才會自己跳出。</span>
             </li>
             <li>
               <span class="chip chip--todo">待辦</span>
