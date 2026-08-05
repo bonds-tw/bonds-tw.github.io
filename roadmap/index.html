@@ -281,6 +281,13 @@
   .blocker p { margin: 0; color: var(--ink-soft); }
   .blocker p strong { color: var(--ink); }
 
+  .blocker.blocker--resolved {
+    border-color: color-mix(in srgb, var(--ok) 35%, transparent);
+    border-left-color: var(--ok);
+    background: var(--ok-bg);
+  }
+  .blocker.blocker--resolved h3 { color: var(--ok); }
+
   /* ---------- milestone track ---------- */
 
   .track { display: flex; flex-direction: column; gap: 1rem; }
@@ -561,50 +568,58 @@
     </div>
     <h1>工程藍圖與進度</h1>
     <p class="standfirst">
-      把白皮書第 5 章的「小密封罐」拆成可施工的模組：資料可驗、本人可驗、離線出示、驗證者端、互通。
-      本頁追蹤每個模組的真實狀態——包含還沒開始的，以及被行政程序卡住的。
+      把白皮書第 5 章的「小密封罐」拆成可施工的模組：資料可驗、本人可驗、離線驗證、驗證者端、互通。
+      本頁追蹤每個模組的真實狀態——包含還沒開始的，以及還沒解決的。
     </p>
-    <span class="draft-flag">草案 v0.1 · 待團隊審閱後才是正式路線圖</span>
+    <span class="draft-flag">草案 v0.2 · 2026-08-05 更新：TW FidO 測試憑證已到位</span>
   </header>
 
   <dl class="stats">
     <div class="stat stat--ok">
       <dt>已完成</dt>
-      <dd>1 <small>／ 27 項工作</small></dd>
+      <dd>2 <small>／ 30 項工作</small></dd>
     </div>
     <div class="stat">
       <dt>整體進度</dt>
-      <dd>8<small>%</small></dd>
+      <dd>10<small>%</small></dd>
     </div>
-    <div class="stat stat--blocked">
+    <div class="stat stat--ok">
       <dt>受阻</dt>
-      <dd>6 <small>項（TW FidO SP）</small></dd>
+      <dd>0 <small>項（原 6 項已解鎖）</small></dd>
     </div>
     <div class="stat">
-      <dt>待驗證假設</dt>
-      <dd>3 <small>個技術 spike</small></dd>
+      <dt>負責人</dt>
+      <dd>豆泥 <small>／ 全部里程碑</small></dd>
     </div>
   </dl>
 
   <section class="section">
     <header>
       <h2>擋在最前面的那件事</h2>
+      <p>上一版是 TW FidO SP 資格。測試憑證到位後，路障換人了——而且換成小很多的一個。</p>
     </header>
+    <div class="blocker blocker--resolved">
+      <h3>已解鎖：TW FidO 模擬測試憑證到位</h3>
+      <p>
+        取得了走行憑正式環境的模擬測試 SP 憑證，<code>getSpTicket</code> /
+        <code>getAthOrSignResult</code> 現在可以呼叫，<strong>M2 到 M4 的開發不再需要等行政流程</strong>。
+      </p>
+      <p>
+        但有個必須寫下來的但書：這組 <code>sp_service_id</code> 與規格書 v2.9 公開範例值
+        <strong>逐字元相同</strong>，是模擬測試系統的共用識別碼，不是 bonds-tw 專屬憑證。
+        開發測試完全夠用，<strong>但正式上線前仍須向 MOICA 申請專屬 SP</strong>。
+        白皮書 5.2 講的行政門檻沒有消失，只是不再擋住開工。
+      </p>
+    </div>
     <div class="blocker">
-      <h3>TW FidO 的 SP（服務提供者）資格尚未申請</h3>
+      <h3>現在的路障：這台 Mac 還沒有 Xcode，而且空間不夠</h3>
       <p>
-        零知識證明這條路的入口，是 TW FidO 的 <code>sp-ticket</code> / <code>ath-result</code> 這組 API——
-        它才會回傳做證明所需的 <code>signed_response</code> 與 <code>cert</code>。
-        呼叫它需要 MOICA 核發的 <strong>SP service ID 與 AES 金鑰</strong>。
+        目前只有 Command Line Tools。PSE 範例 App 的部署目標是 iOS 26，需要 Xcode 26 以上；
+        可用磁碟空間 <strong>13 GiB</strong>，Xcode 裝完約需 15 GiB＋。<strong>要先清空間。</strong>
       </p>
       <p>
-        目前 App 只把 <code>mobilemoica://</code> 當成「登入 MyData 的方式」，
-        全程沒有拿到任何簽章材料。<strong>沒有 SP 資格，M2 到 M4 一行程式碼都跑不到真實資料。</strong>
-        白皮書 5.2 自己也點名了這個門檻（「TW FidO 的第三方與國際串接尚有行政門檻」）。
-      </p>
-      <p>
-        這是行政流程、不是工程問題，前置期以月計。
-        <strong>建議本週就送件</strong>，其餘工作全部平行推進，不要等。
+        好消息是有一段完全不需要 Xcode：用 node 直接跑完 TW FidO 簽章流程、驗證憑證是活的。
+        建議先做這步再去下載 Xcode——萬一憑證有問題，不會白等一小時。
       </p>
     </div>
   </section>
@@ -674,7 +689,7 @@
         <div class="ms__body">
           <div class="ms__head">
             <h3 class="ms__title">工程基盤</h3>
-            <span class="ms__meta">無相依 · 可立即開工</span>
+            <span class="ms__meta">豆泥 · 無相依 · 可立即開工</span>
           </div>
           <p class="ms__goal">讓這個 repo 具備承接後續五個里程碑的條件。小、雜、但每一項都會在後面擋路。</p>
           <div class="meter">
@@ -682,6 +697,11 @@
             <span class="meter__pct">0%</span>
           </div>
           <ul class="tasks">
+            <li>
+              <span class="chip chip--todo">待辦</span>
+              <span class="t-name">清空間並安裝 Xcode 26+</span>
+              <span class="t-note">開發機目前只有 Command Line Tools，可用空間 13 GiB。這是眼下唯一真正擋住 iOS 開工的東西。</span>
+            </li>
             <li>
               <span class="chip chip--todo">待辦</span>
               <span class="t-name">補上開源授權條款</span>
@@ -717,7 +737,7 @@
         <div class="ms__body">
           <div class="ms__head">
             <h3 class="ms__title">資料可驗：MyData → 自發行 VC</h3>
-            <span class="ms__meta">相依 M0 · 不受 SP 卡關影響</span>
+            <span class="ms__meta">豆泥 · 相依 M0 · 可與 M2 平行</span>
           </div>
           <p class="ms__goal">把「下載完就丟掉」的身分欄位，變成<em>存得住、簽得了、拿得出來</em>的可驗證憑證。</p>
           <div class="meter">
@@ -755,12 +775,12 @@
       </article>
 
       <!-- M2 -->
-      <article class="ms ms--blocked">
+      <article class="ms ms--active">
         <div class="ms__rail"><span class="ms__id">M2</span><span class="ms__dot"></span></div>
         <div class="ms__body">
           <div class="ms__head">
             <h3 class="ms__title">本人可驗：TW FidO 簽章與 ZK 證明</h3>
-            <span class="ms__meta">受阻 · 等 SP 資格</span>
+            <span class="ms__meta">豆泥 · 已解鎖 · 相依 Xcode</span>
           </div>
           <p class="ms__goal">接上 PSE 的 OpenAC，讓 App 能在本機產出「我持有有效自然人憑證」的零知識證明。</p>
           <div class="meter">
@@ -769,19 +789,29 @@
           </div>
           <ul class="tasks">
             <li>
-              <span class="chip chip--blocked">受阻</span>
-              <span class="t-name">申請 TW FidO SP 資格</span>
-              <span class="t-note">整條線的前置條件。需要 <code>fidoSpServiceID</code> 與 32-byte AES 金鑰（算 <code>sp_checksum</code> 用）。</span>
+              <span class="chip chip--done">已完成</span>
+              <span class="t-name">取得 TW FidO 測試憑證</span>
+              <span class="t-note">走行憑正式環境的模擬測試 SP。但識別碼與規格書公開範例值相同，非專屬憑證——正式上線前仍須申請 bonds-tw 專屬 SP。</span>
             </li>
             <li>
-              <span class="chip chip--blocked">受阻</span>
+              <span class="chip chip--partial">進行中</span>
+              <span class="t-name">以 node helper 驗證憑證可用</span>
+              <span class="t-note">不需要 Xcode，今天就能做。<code>sp_checksum</code> 算法已對照規格書驗證：SHA-256 hex → AES-256-GCM → <code>IV(12B)‖密文(64B)‖tag(16B)</code>，共 184 個 hex 字元。</span>
+            </li>
+            <li>
+              <span class="chip chip--todo">待辦</span>
               <span class="t-name">App-to-App 簽章流程</span>
-              <span class="t-note"><code>sp-ticket</code> → 深連結 <code>mobilemoica://.../a2a/verifySign</code> → 回呼 → <code>ath-result</code> 輪詢。與現有 WebView 登入是兩條完全不同的路徑。</span>
+              <span class="t-note"><code>getSpTicket</code> → 深連結 <code>mobilemoica://.../a2a/verifySign</code> → 回呼 → <code>getAthOrSignResult</code> 輪詢。與現有 WebView 登入是兩條完全不同的路徑。</span>
             </li>
             <li>
               <span class="chip chip--todo">待辦</span>
               <span class="t-name">整合 <code>openac-rsa-x509-swift</code></span>
-              <span class="t-note">SPM 加依賴即可，不必等 SP——可先用 repo 附的測試向量把整條 prove/verify 跑通。</span>
+              <span class="t-note">SPM 加依賴。<code>sign_type</code> 必須是 <code>PKCS#1</code>，電路只吃這個。</span>
+            </li>
+            <li>
+              <span class="chip chip--todo">待辦</span>
+              <span class="t-name">選定 bonds-tw 專屬 <code>APP_ID</code></span>
+              <span class="t-note">31 字元 hex。nullifier 由 <code>APP_ID</code> ＋ 持卡人金鑰導出，不可沿用 Matters 的，否則等於共用去重命名空間。</span>
             </li>
             <li>
               <span class="chip chip--todo">待辦</span>
@@ -791,7 +821,7 @@
             <li>
               <span class="chip chip--spike">技術驗證</span>
               <span class="t-name">Spike：實機證明效能與記憶體</span>
-              <span class="t-note">範例 App 數據為 prove 約 5 秒、verify 約 13 秒。verify 13 秒放在查驗現場是不可接受的——要先量測真機數字，再決定 UX 與是否需要上游調整。</span>
+              <span class="t-note">範例 App 數據為 prove 約 5 秒、verify 約 13 秒。<strong>必須在實機量測</strong>：Matters 實測 macOS arm64 重複產生 <code>certChainRS4096</code> witness 會 SIGSEGV（upstream 假資料也會），macOS 不能當穩定性驗收環境。</span>
             </li>
           </ul>
         </div>
@@ -802,12 +832,15 @@
         <div class="ms__rail"><span class="ms__id">M3</span><span class="ms__dot"></span></div>
         <div class="ms__body">
           <div class="ms__head">
-            <h3 class="ms__title">離線出示：把 No Phone Home 做成真的</h3>
-            <span class="ms__meta">相依 M2 · 架構風險最高</span>
+            <h3 class="ms__title">離線驗證：把 No Phone Home 做成真的</h3>
+            <span class="ms__meta">豆泥 · 相依 M2 · 已延後</span>
           </div>
           <p class="ms__goal">
-            這是<em>整份藍圖最需要自己動手的一段</em>。PSE 的流程是線上的：跟伺服器要 challenge、產證明、
+            <strong>範圍已收斂：只做「驗證離線」，不做「發證離線」。</strong>
+            發證階段需要 MyData 與 TW FidO，本來就得連網；要離線的是查驗現場那一端。
+            這是<em>整份藍圖最需要自己動手的一段</em>——PSE 的流程是線上的：跟伺服器要 challenge、產證明、
             POST 回去驗證並在伺服器端做 nullifier 去重。白皮書 5.2 要的卻是離線點對點、不回傳、不留軌跡。
+            順序上排在 M2 跑通之後。
           </p>
           <div class="meter">
             <div class="meter__bar"><div class="meter__fill" style="width:0%"></div></div>
@@ -849,7 +882,7 @@
         <div class="ms__body">
           <div class="ms__head">
             <h3 class="ms__title">驗證者端與可示範場景</h3>
-            <span class="ms__meta">相依 M3</span>
+            <span class="ms__meta">豆泥 · 相依 M3</span>
           </div>
           <p class="ms__goal">沒有驗證者，皮夾只是個人收藏。5.2 承諾要釋出一個「不連雲端、不記名、不留軌跡」的輕量驗證介面。</p>
           <div class="meter">
@@ -887,7 +920,7 @@
         <div class="ms__body">
           <div class="ms__head">
             <h3 class="ms__title">互通：OID4VCI 與 TW-DIW 對齊</h3>
-            <span class="ms__meta">相依 M1 · 白皮書標為中長期</span>
+            <span class="ms__meta">豆泥 · 相依 M1 · 白皮書標為中長期</span>
           </div>
           <p class="ms__goal">讓這個皮夾不是孤島。5.2 把它定位為「未來計劃」，所以排在最後，但資料模型現在就要留好接口。</p>
           <div class="meter">
@@ -981,6 +1014,12 @@
             <td>持續更新</td>
             <td class="verdict">需離線化改造</td>
           </tr>
+          <tr>
+            <td><code>thematters/<wbr>zkid-personhood</code></td>
+            <td>同一條路的先行者：已實測跑到 <code>/link-verify</code> 回傳 <code>verified=true</code>。附可用的 TW FidO 簽章 helper 與 e2e runbook。</td>
+            <td>2026-05</td>
+            <td class="verdict">前案，直接借用</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1001,9 +1040,24 @@
         </thead>
         <tbody>
           <tr>
-            <td>TW FidO SP 申請未過或延宕</td>
-            <td>M2–M4 全線停擺</td>
-            <td>立即送件；同時以測試向量把 ZK 管線先跑通，讓 SP 一到就能接上</td>
+            <td>測試 SP 憑證是共用範例值</td>
+            <td>開發無礙，但不能當成 bonds-tw 的正式身分；正式上線前仍須申請</td>
+            <td>視為開發用鷹架。專屬 SP 申請與組織 Apple 帳號同批送，別因為「能跑了」而忘記</td>
+          </tr>
+          <tr>
+            <td>開發機沒有 Xcode 且空間不足</td>
+            <td>iOS 端一步都動不了</td>
+            <td>先清 25 GiB 再裝 Xcode 26+；同時先跑不需要 Xcode 的 node 驗證步驟</td>
+          </tr>
+          <tr>
+            <td>macOS arm64 witnesscalc SIGSEGV</td>
+            <td>本機證明測試會誤判為 TW FidO 或憑證錯誤</td>
+            <td>Matters 已確認是 upstream 環境問題。證明穩定性一律在實機驗收</td>
+          </tr>
+          <tr>
+            <td>A2A 回呼網址可能需登記</td>
+            <td>簽完回不到 App，流程斷在最後一步</td>
+            <td>規格書未明訂。先試自訂 scheme，不行改 <code>https://</code> 形式並向 MOICA 確認</td>
           </tr>
           <tr>
             <td>離線驗證耗時過長</td>
@@ -1036,8 +1090,8 @@
   </section>
 
   <footer>
-    <div>本頁狀態為 2026-08-05 的實地盤點結果，隨施工進度更新。</div>
-    <div>依據：<a href="https://blog.bonds.tw/litepaper/#50">《有備而來》白皮書第 5 章</a>．上游 ZK 元件：<a href="https://github.com/privacy-ethereum/ZK-based-Proof-of-Personhood">privacy-ethereum/ZK-based-Proof-of-Personhood</a></div>
+    <div>本頁狀態為 2026-08-05 的實地盤點結果，隨施工進度更新。全部里程碑負責人：豆泥。</div>
+    <div>依據：<a href="https://blog.bonds.tw/litepaper/#50">《有備而來》白皮書第 5 章</a>、《行動自然人憑證應用程式介面規格書 v2.9》．上游 ZK 元件：<a href="https://github.com/privacy-ethereum/ZK-based-Proof-of-Personhood">privacy-ethereum/ZK-based-Proof-of-Personhood</a>．前案：<a href="https://github.com/thematters/zkid-personhood">thematters/zkid-personhood</a></div>
   </footer>
 
 </div>
