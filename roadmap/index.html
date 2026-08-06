@@ -571,21 +571,21 @@
       把白皮書第 5 章的「小密封罐」拆成可施工的模組：資料可驗、本人可驗、離線驗證、驗證者端、互通。
       本頁追蹤每個模組的真實狀態——包含還沒開始的，以及還沒解決的。
     </p>
-    <span class="draft-flag">草案 v0.4 · 2026-08-06 更新：TW FidO 簽章 helper 已併入（推播模式）</span>
+    <span class="draft-flag">草案 v0.5 · 2026-08-06 更新：M1 完成、M2 過半、218 個測試</span>
   </header>
 
   <dl class="stats">
     <div class="stat stat--ok">
       <dt>已完成</dt>
-      <dd>7 <small>／ 30 項工作</small></dd>
+      <dd>13 <small>／ 30 項工作</small></dd>
     </div>
     <div class="stat">
       <dt>整體進度</dt>
-      <dd>28<small>%</small></dd>
+      <dd>48<small>%</small></dd>
     </div>
     <div class="stat stat--ok">
-      <dt>受阻</dt>
-      <dd>0 <small>項（原 6 項已解鎖）</small></dd>
+      <dt>測試</dt>
+      <dd>218 <small>／ 0 skipped</small></dd>
     </div>
     <div class="stat">
       <dt>負責人</dt>
@@ -611,20 +611,25 @@
         白皮書 5.2 講的行政門檻沒有消失，只是不再擋住開工。
       </p>
     </div>
+    <div class="blocker blocker--resolved">
+      <h3>已解鎖：Xcode 27 可用（本機建置約 2 分鐘）</h3>
+      <p>
+        原本 App Store 的下載是死的——這台跑 macOS 27 beta，而 App Store 供應正式版 Xcode。
+        改從 developer.apple.com 直接下載後解決。<code>xcode-select</code> 需要 sudo，
+        但用 <code>DEVELOPER_DIR</code> 環境變數指向 Xcode-beta 就能繞過。
+      </p>
+    </div>
     <div class="blocker">
-      <h3>現在的路障：Xcode 裝不起來，因為這台跑的是 macOS 27 beta</h3>
+      <h3>剩下的都需要一支實機</h3>
       <p>
-        空間已清出（79 GiB 可用），但 App Store 的 Xcode 下載<strong>是死的、不是慢的</strong>——
-        <code>storedownloadd</code> 根本沒在跑。連 <code>brew</code> 也失敗，它要「Command Line Tools for Xcode 27.0」；
-        <code>softwareupdate</code> 則只提供 macOS 27 Beta 4。
+        程式碼層能做的都做完了。無法在這裡驗證的有四件事：
+        <strong>Secure Enclave 是否真的生效</strong>（模擬器一定退回 Keychain）、
+        檔案保護等級在模擬器是 no-op、<strong>實機證明耗時</strong>（prove 約 5 秒／verify 約 13 秒是上游數據，
+        13 秒放在查驗現場不可接受），以及 TW FidO 的三個規格細節必須打到真實伺服器才知道對不對。
       </p>
       <p>
-        App Store 供應的是正式版 Xcode，在 beta OS 上卡住是常態。
-        <strong>解法是改從 developer.apple.com 直接下載 .xip</strong>，瀏覽器可續傳，不依賴那個已經死掉的 daemon。
-      </p>
-      <p>
-        但這不等於停工：Command Line Tools 內含 <strong>Swift 6.2</strong>，純 Swift 邏輯可以單獨編譯驗證；
-        CI 在 GitHub 的 macOS runner 上跑，本機沒有 Xcode 也照樣有建置與測試驗收。M0 就是這樣完成的。
+        另一個不需要實機、但必須有人接的缺口：<strong>A2A 回呼 scheme 已註冊，但沒有人接</strong>。
+        簽完回到 App 會啟動然後什麼都不發生——scheme 註冊不等於流程閉環。
       </p>
     </div>
   </section>
@@ -698,14 +703,14 @@
           </div>
           <p class="ms__goal">讓這個 repo 具備承接後續五個里程碑的條件。小、雜、但每一項都會在後面擋路。</p>
           <div class="meter">
-            <div class="meter__bar"><div class="meter__fill" style="width:75%"></div></div>
-            <span class="meter__pct">75%</span>
+            <div class="meter__bar"><div class="meter__fill" style="width:90%"></div></div>
+            <span class="meter__pct">90%</span>
           </div>
           <ul class="tasks">
             <li>
-              <span class="chip chip--partial">半完成</span>
+              <span class="chip chip--done">已完成</span>
               <span class="t-name">清空間並安裝 Xcode</span>
-              <span class="t-note">空間已清出（79 GiB 可用）。Xcode 仍未裝——根因是本機跑 macOS 27 beta，App Store 版下載會卡死，須改從 developer.apple.com 直接下載 .xip。</span>
+              <span class="t-note">Xcode 27 已裝。<code>xcode-select</code> 需要 sudo，改用 <code>DEVELOPER_DIR</code> 環境變數指向 Xcode-beta 即可，本機建置實測約 2 分鐘。</span>
             </li>
             <li>
               <span class="chip chip--done">已完成</span>
@@ -737,17 +742,17 @@
       </article>
 
       <!-- M1 -->
-      <article class="ms ms--active">
+      <article class="ms ms--done">
         <div class="ms__rail"><span class="ms__id">M1</span><span class="ms__dot"></span></div>
         <div class="ms__body">
           <div class="ms__head">
             <h3 class="ms__title">資料可驗：MyData → 自發行 VC</h3>
-            <span class="ms__meta">豆泥 · 相依 M0 · 可與 M2 平行</span>
+            <span class="ms__meta">豆泥 · 已完成</span>
           </div>
           <p class="ms__goal">把「下載完就丟掉」的身分欄位，變成<em>存得住、簽得了、拿得出來</em>的可驗證憑證。</p>
           <div class="meter">
-            <div class="meter__bar"><div class="meter__fill" style="width:40%"></div></div>
-            <span class="meter__pct">40%</span>
+            <div class="meter__bar"><div class="meter__fill" style="width:100%"></div></div>
+            <span class="meter__pct">100%</span>
           </div>
           <ul class="tasks">
             <li>
@@ -761,19 +766,19 @@
               <span class="t-note">已改為具名欄位比對＋容錯，並補上 8 組測試（含多行地址、欄位順序調換、全形冒號、三種原本會閃退的短文件）。</span>
             </li>
             <li>
-              <span class="chip chip--todo">待辦</span>
+              <span class="chip chip--done">已完成</span>
               <span class="t-name">裝置金鑰與 Secure Enclave</span>
-              <span class="t-note">目前完全沒有金鑰管理。持有者 DID 要綁在 Secure Enclave 的 P-256 金鑰上，這把金鑰同時是後面 M2 綁定兩張憑證的錨點。</span>
+              <span class="t-note">Secure Enclave P-256，模擬器退回 Keychain 且退回可被查詢而非靜默降級。附 <code>IdentityReset</code>——刪憑證不動金鑰，但「全部抹除」必須連金鑰一起刪，否則重新 onboarding 會拿到同一個 DID。</span>
             </li>
             <li>
-              <span class="chip chip--todo">待辦</span>
+              <span class="chip chip--done">已完成</span>
               <span class="t-name">W3C VC 2.0 資料模型與自我簽發</span>
-              <span class="t-note">把 <code>NationalIDModel</code> 升級為 VC，以 Data Integrity（JOSE/COSE）簽章。此時的信任根只有裝置金鑰——法律效力要等 M2 的 TW FidO 簽章補上。</span>
+              <span class="t-note">VC 2.0 ＋ ES256 compact JWS。<strong>審查抓到一個會靜默失效的坑</strong>：只掛 credentials/v2 這個 context 時，JSON-LD expansion 會把統號、出生日期、戶籍地址全部丟掉而簽章照樣驗得過。已改用內嵌 context 並實測 expansion 產出全部 10 個 triple。</span>
             </li>
             <li>
-              <span class="chip chip--todo">待辦</span>
-              <span class="t-name">加密持久化</span>
-              <span class="t-note">現在資料只活在記憶體裡，關掉就沒了。Keychain + 檔案保護，並提供「一鍵刪除」（<code>bond-tw-app</code> 已經畫好這組畫面）。</span>
+              <span class="chip chip--done">已完成</span>
+              <span class="t-name">加密持久化與一鍵刪除</span>
+              <span class="t-note">檔案保護＋排除 iCloud 備份＋防路徑穿越。MyData 的明文中間產物原本留在 Documents 且被 Files App 公開，已移走並在解析後主動刪除。刪除控制項已接上設定頁。</span>
             </li>
           </ul>
         </div>
@@ -785,12 +790,12 @@
         <div class="ms__body">
           <div class="ms__head">
             <h3 class="ms__title">本人可驗：TW FidO 簽章與 ZK 證明</h3>
-            <span class="ms__meta">豆泥 · 已解鎖 · 相依 Xcode</span>
+            <span class="ms__meta">豆泥 · 進行中</span>
           </div>
           <p class="ms__goal">接上 PSE 的 OpenAC，讓 App 能在本機產出「我持有有效自然人憑證」的零知識證明。</p>
           <div class="meter">
-            <div class="meter__bar"><div class="meter__fill" style="width:0%"></div></div>
-            <span class="meter__pct">0%</span>
+            <div class="meter__bar"><div class="meter__fill" style="width:55%"></div></div>
+            <span class="meter__pct">55%</span>
           </div>
           <ul class="tasks">
             <li>
@@ -804,24 +809,24 @@
               <span class="t-note">helper 已寫好並併入 <code>scripts/twfido-sign.mjs</code>，request 內容以本機 echo server 逐欄驗過。尚未實際完成一次簽章。<strong>坑：</strong>沿用的 Matters helper 寫死 <code>op_mode=APP2APP</code>，該模式不推播、只給深連結，從 terminal 跑 App 永遠不會有動靜；改用 SP-API-ATH-03 推播模式才會自己跳出。</span>
             </li>
             <li>
-              <span class="chip chip--todo">待辦</span>
+              <span class="chip chip--partial">進行中</span>
               <span class="t-name">App-to-App 簽章流程</span>
-              <span class="t-note"><code>getSpTicket</code> → 深連結 <code>mobilemoica://.../a2a/verifySign</code> → 回呼 → <code>getAthOrSignResult</code> 輪詢。與現有 WebView 登入是兩條完全不同的路徑。</span>
+              <span class="t-note">用戶端已完成（ATH-01/02/03、四種 checksum 串接、<code>idp_checksum</code> 回應驗證）。<strong>缺口：回呼 scheme 已註冊但沒有人接</strong>——簽完回到 App 會什麼都不發生。</span>
             </li>
             <li>
               <span class="chip chip--todo">待辦</span>
               <span class="t-name">整合 <code>openac-rsa-x509-swift</code></span>
-              <span class="t-note">SPM 加依賴。<code>sign_type</code> 必須是 <code>PKCS#1</code>，電路只吃這個。</span>
+              <span class="t-note">SPM 加依賴。<code>sign_type</code> 必須是 <code>PKCS#1</code>，電路只吃這個。前置的資產下載與簽章材料取得都已就緒。</span>
             </li>
             <li>
-              <span class="chip chip--todo">待辦</span>
+              <span class="chip chip--done">已完成</span>
               <span class="t-name">選定 bonds-tw 專屬 <code>APP_ID</code></span>
-              <span class="t-note">31 字元 hex。nullifier 由 <code>APP_ID</code> ＋ 持卡人金鑰導出，不可沿用 Matters 的，否則等於共用去重命名空間。</span>
+              <span class="t-note"><code>55349ff540392a077ca3dcc9bbda4c3</code>，由 bundle id 的 SHA-256 導出所以可複驗。</span>
             </li>
             <li>
-              <span class="chip chip--todo">待辦</span>
+              <span class="chip chip--done">已完成</span>
               <span class="t-name">電路與金鑰下載管理</span>
-              <span class="t-note">proving key 與 SMT 快照都要下載解壓（範例 App 約 10 秒）。需要斷點續傳、完整性校驗、以及「離線前先備妥」的引導。</span>
+              <span class="t-note">可續傳、串流解壓、SHA-256 pin（已逐一比對 GitHub release 實際值）。<strong>撤銷清單刻意不 pin</strong>——它每天重新產生，錨點是鏈上 SMT root，而該檢查誠實標示為未實作。</span>
             </li>
             <li>
               <span class="chip chip--spike">技術驗證</span>
