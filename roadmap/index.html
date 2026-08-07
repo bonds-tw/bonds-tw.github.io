@@ -571,21 +571,21 @@
       把白皮書第 5 章的「小密封罐」拆成可施工的模組：資料可驗、本人可驗、離線驗證、驗證者端、互通。
       本頁追蹤每個模組的真實狀態——包含還沒開始的，以及還沒解決的。
     </p>
-    <span class="draft-flag">草案 v0.7 · 2026-08-07 更新：M3 離線查驗可用、498 個測試</span>
+    <span class="draft-flag">草案 v0.8 · 2026-08-07 更新：ZK 證明在裝置上跑通、實機驗證全綠</span>
   </header>
 
   <dl class="stats">
     <div class="stat stat--ok">
       <dt>已完成</dt>
-      <dd>16 <small>／ 30 項工作</small></dd>
+      <dd>19 <small>／ 32 項工作</small></dd>
     </div>
     <div class="stat">
       <dt>整體進度</dt>
-      <dd>58<small>%</small></dd>
+      <dd>62<small>%</small></dd>
     </div>
     <div class="stat stat--ok">
       <dt>測試</dt>
-      <dd>498 <small>／ 0 skipped</small></dd>
+      <dd>721 <small>／ 0 skipped</small></dd>
     </div>
     <div class="stat">
       <dt>負責人</dt>
@@ -619,19 +619,19 @@
         但用 <code>DEVELOPER_DIR</code> 環境變數指向 Xcode-beta 就能繞過。
       </p>
     </div>
-    <div class="blocker">
-      <h3>剩下的都需要一支實機</h3>
+    <div class="blocker blocker--resolved">
+      <h3>已解決：實機安裝與硬體事實全部確認</h3>
       <p>
-        程式碼層能做的都做完了。無法在這裡驗證的有四件事：
-        <strong>Secure Enclave 是否真的生效</strong>（模擬器一定退回 Keychain）、
-        檔案保護等級在模擬器是 no-op、<strong>實機證明耗時</strong>（prove 約 5 秒／verify 約 13 秒是上游數據，
-        13 秒放在查驗現場不可接受），以及 TW FidO 的三個規格細節必須打到真實伺服器才知道對不對。
+        實機安裝原本卡在 iOS 27 beta，根因是<strong>手機自己殘留的 provisioning profile</strong>——
+        清 Mac 端與解除安裝都不會動到它們，要用 <code>devicectl device profile list/remove</code> 精確移除。
+        現在七項自我檢查在實機上全綠，包含模擬器答不了的兩項：
+        <strong>簽署金鑰確實在 Secure Enclave</strong>、憑證確實帶著 <code>NSFileProtectionCompleteUnlessOpen</code>。
       </p>
       <p>
-        還有一個不是技術問題的路障：<strong>上游三個 ZK 元件都沒有授權條款</strong>
-        （<code>openac-rsa-x509-swift</code>、<code>go-zkid-verifier</code>、<code>moica-revocation-smt</code>）。
-        法律上是保留所有權利，把它們加進 Apache-2.0 的公開 repo 是實質風險——
-        對一個承諾要開源 SDK 的專案更是。這一步只要請 PSE 補上授權就能解，但要有人去問。
+        <strong>仍未解</strong>：上游三個 ZK 元件的 repo 至今仍沒有 LICENSE 檔
+        （<code>openac-rsa-x509-swift</code>、<code>go-zkid-verifier</code>、<code>moica-revocation-smt</code>；
+        只有電路本體 <code>zkID</code> 是 MIT）。依 PSE 書面回覆為 MIT 動工，
+        但第三方無法驗證這件事——對一個承諾開源 SDK 的專案，這仍是硬傷。
       </p>
     </div>
   </section>
@@ -796,8 +796,8 @@
           </div>
           <p class="ms__goal">接上 PSE 的 OpenAC，讓 App 能在本機產出「我持有有效自然人憑證」的零知識證明。</p>
           <div class="meter">
-            <div class="meter__bar"><div class="meter__fill" style="width:70%"></div></div>
-            <span class="meter__pct">70%</span>
+            <div class="meter__bar"><div class="meter__fill" style="width:78%"></div></div>
+            <span class="meter__pct">78%</span>
           </div>
           <ul class="tasks">
             <li>
@@ -806,7 +806,7 @@
               <span class="t-note">走行憑正式環境的模擬測試 SP。但識別碼與規格書公開範例值相同，非專屬憑證——正式上線前仍須申請 bonds-tw 專屬 SP。</span>
             </li>
             <li>
-              <span class="chip chip--partial">進行中</span>
+              <span class="chip chip--done">已完成</span>
               <span class="t-name">以 node helper 驗證憑證可用</span>
               <span class="t-note">helper 已寫好並併入 <code>scripts/twfido-sign.mjs</code>，request 內容以本機 echo server 逐欄驗過。尚未實際完成一次簽章。<strong>坑：</strong>沿用的 Matters helper 寫死 <code>op_mode=APP2APP</code>，該模式不推播、只給深連結，從 terminal 跑 App 永遠不會有動靜；改用 SP-API-ATH-03 推播模式才會自己跳出。</span>
             </li>
@@ -816,9 +816,9 @@
               <span class="t-note">用戶端＋回呼路由都完成。回呼被當成「叫醒」而非「結果」——任何 App 都能註冊同一個 scheme，所以簽章仍從伺服器取得並由 <code>idp_checksum</code> 認證，偽造的回呼最多讓我們多打一次請求。</span>
             </li>
             <li>
-              <span class="chip chip--blocked">受阻</span>
+              <span class="chip chip--done">已完成</span>
               <span class="t-name">整合 <code>openac-rsa-x509-swift</code></span>
-              <span class="t-note">前置的資產下載與簽章材料取得都已就緒，技術上可以直接加 SPM 依賴。<strong>但該套件目前沒有授權條款</strong>（<code>go-zkid-verifier</code>、<code>moica-revocation-smt</code> 也是），把無授權的二進位相依加進 Apache-2.0 的公開 repo 是實質法律風險。建議先請 PSE 補上授權再整合。</span>
+              <span class="t-note">SPM 相依已接上，六個 API 實測連結成功。二進位框架含模擬器切片，所以不受實機問題影響。⚠️ 該 repo 至今仍無 LICENSE 檔（<code>go-zkid-verifier</code>、<code>moica-revocation-smt</code> 也是）；依 PSE 書面回覆為 MIT 動工，但仍應請他們補進 repo，否則第三方無法驗證。</span>
             </li>
             <li>
               <span class="chip chip--done">已完成</span>
@@ -831,9 +831,19 @@
               <span class="t-note">可續傳、串流解壓、SHA-256 pin（已逐一比對 GitHub release 實際值）。<strong>撤銷清單刻意不 pin</strong>——它每天重新產生，錨點是鏈上 SMT root，而該檢查誠實標示為未實作。</span>
             </li>
             <li>
-              <span class="chip chip--spike">技術驗證</span>
-              <span class="t-name">Spike：實機證明效能與記憶體</span>
-              <span class="t-note">範例 App 數據為 prove 約 5 秒、verify 約 13 秒。<strong>必須在實機量測</strong>：Matters 實測 macOS arm64 重複產生 <code>certChainRS4096</code> witness 會 SIGSEGV（upstream 假資料也會），macOS 不能當穩定性驗收環境。</span>
+              <span class="chip chip--done">已完成</span>
+              <span class="t-name">證明效能與記憶體實測</span>
+              <span class="t-note">用<strong>真實的行動自然人憑證簽章</strong>跑完整條路：prove 6.34＋2.13 秒、verify 6.44＋2.19 秒、<code>linkVerify</code> 7.06 秒且<strong>回傳 true</strong>。記憶體峰值約 1.8 GB、安裝後資產 1.96 GB。<strong>驗證比產生還慢</strong>——站在查驗現場等的是驗證方，這個數字直接影響 M3 的設計。</span>
+            </li>
+            <li>
+              <span class="chip chip--todo">待辦</span>
+              <span class="t-name">從證明金鑰推導驗證金鑰</span>
+              <span class="t-note">已用雜湊比對確認：驗證金鑰就是證明金鑰去掉最後 32 bytes 的完全相同前綴。<strong>約 968 MB 是可以在裝置上推導的，不必下載</strong>——下載量能從 1.96 GB 砍回約 1 GB。</span>
+            </li>
+            <li>
+              <span class="chip chip--todo">待辦</span>
+              <span class="t-name">修掉「約束未滿足卻回報成功」</span>
+              <span class="t-note"><code>tbs</code> 與簽章不符時，<code>prove</code> 會回傳一個大小、耗時都正常的 <code>ProofResult</code>（電路 assert 只印在 stderr），到驗證階段才以 <code>UniffiInternalError</code> 爆出，畫面顯示成「這支手機無法完成驗證」——把被拒絕的證明講成硬體小毛病。</span>
             </li>
           </ul>
         </div>
