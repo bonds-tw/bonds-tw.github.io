@@ -571,21 +571,21 @@
       把白皮書第 5 章的「小密封罐」拆成可施工的模組：資料可驗、本人可驗、離線驗證、驗證者端、互通。
       本頁追蹤每個模組的真實狀態——包含還沒開始的，以及還沒解決的。
     </p>
-    <span class="draft-flag">草案 v0.6 · 2026-08-06 更新：M1 完成、A2A 回呼接上、226 個測試</span>
+    <span class="draft-flag">草案 v0.7 · 2026-08-07 更新：M3 離線查驗可用、498 個測試</span>
   </header>
 
   <dl class="stats">
     <div class="stat stat--ok">
       <dt>已完成</dt>
-      <dd>14 <small>／ 30 項工作</small></dd>
+      <dd>16 <small>／ 30 項工作</small></dd>
     </div>
     <div class="stat">
       <dt>整體進度</dt>
-      <dd>50<small>%</small></dd>
+      <dd>58<small>%</small></dd>
     </div>
     <div class="stat stat--ok">
       <dt>測試</dt>
-      <dd>226 <small>／ 0 skipped</small></dd>
+      <dd>498 <small>／ 0 skipped</small></dd>
     </div>
     <div class="stat">
       <dt>負責人</dt>
@@ -840,12 +840,12 @@
       </article>
 
       <!-- M3 -->
-      <article class="ms">
+      <article class="ms ms--active">
         <div class="ms__rail"><span class="ms__id">M3</span><span class="ms__dot"></span></div>
         <div class="ms__body">
           <div class="ms__head">
             <h3 class="ms__title">離線驗證：把 No Phone Home 做成真的</h3>
-            <span class="ms__meta">豆泥 · 相依 M2 · 已延後</span>
+            <span class="ms__meta">豆泥 · 進行中</span>
           </div>
           <p class="ms__goal">
             <strong>範圍已收斂：只做「驗證離線」，不做「發證離線」。</strong>
@@ -855,34 +855,34 @@
             順序上排在 M2 跑通之後。
           </p>
           <div class="meter">
-            <div class="meter__bar"><div class="meter__fill" style="width:0%"></div></div>
-            <span class="meter__pct">0%</span>
+            <div class="meter__bar"><div class="meter__fill" style="width:60%"></div></div>
+            <span class="meter__pct">60%</span>
           </div>
           <ul class="tasks">
             <li>
-              <span class="chip chip--spike">技術驗證</span>
-              <span class="t-name">Spike：challenge 改由驗證者產生</span>
-              <span class="t-note">拿掉伺服器後，防重放的 nonce 必須由驗證端當場產生並經由本地通道交付。這是能不能離線的關鍵一刀。</span>
+              <span class="chip chip--done">已完成</span>
+              <span class="t-name">challenge 改由驗證者產生</span>
+              <span class="t-note">驗證者當場產生 challenge，持證者用裝置金鑰簽的 VP 涵蓋它。成功與失敗都消費掉該 challenge——失敗仍保留等於給攻擊者對活體 challenge 的無限次嘗試。</span>
             </li>
             <li>
-              <span class="chip chip--todo">待辦</span>
+              <span class="chip chip--done">已完成</span>
               <span class="t-name">本機驗證路徑</span>
-              <span class="t-note">好消息是 <code>OpenACSwift</code> 已經有 <code>linkVerify(documentsPath:)</code>，驗證不必然要走伺服器——這就是離線化的接縫。</span>
+              <span class="t-note">整條查驗路徑<strong>零網路呼叫</strong>。補上了 did:key 反向解碼——先前驗證者拿到 issuer DID 卻還原不出公鑰，等於什麼都驗不了。雙層驗簽（VP ＋ 內層 VC）＋ challenge 比對 ＋ 時效。</span>
             </li>
             <li>
-              <span class="chip chip--todo">待辦</span>
+              <span class="chip chip--partial">半完成</span>
               <span class="t-name">點對點傳輸層</span>
-              <span class="t-note">白皮書點名 Wi-Fi Aware／藍牙／NFC。先做一個就好，並保留 QR 作為零依賴的退路。</span>
+              <span class="t-note">QR 已完成（含分片與輪播——一份中文 VC 的 JWS 實測 3,076 bytes，塞不進單張）。Wi-Fi Aware／藍牙／NFC 尚未做；QR 本來就是零依賴的退路，先有它比較實際。</span>
             </li>
             <li>
               <span class="chip chip--spike">技術驗證</span>
               <span class="t-name">Spike：離線的唯一性怎麼辦</span>
-              <span class="t-note">nullifier 去重原本靠伺服器端資料庫。離線時無法全域去重——需要決定降級語意（單場域去重？時窗內去重？），這是設計決策，不是實作細節。</span>
+              <span class="t-note">仍未決。這一輪做的是 VC 出示，不是 ZK 的 nullifier，所以還沒碰到。<strong>但已經確認一個更根本的問題</strong>：自發行 VC 帶固定 did:key，<strong>每次出示都可被連結</strong>——與白皮書的不可連結性衝突，解法是 ZK 選擇性揭露。</span>
             </li>
             <li>
               <span class="chip chip--todo">待辦</span>
               <span class="t-name">撤銷清單離線快照</span>
-              <span class="t-note"><code>moica-revocation-smt</code> 有提供離線二進位快照，需設計更新節奏與過期政策。</span>
+              <span class="t-note">尚未做。目前查驗<strong>通過的結果會明白標示「離線狀態無法確認這份證件是否已被撤銷」</strong>——不給看起來無條件的綠勾。</span>
             </li>
           </ul>
         </div>
