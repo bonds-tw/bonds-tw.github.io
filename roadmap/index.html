@@ -571,21 +571,21 @@
       把白皮書第 5 章的「小密封罐」拆成可施工的模組：資料可驗、本人可驗、離線驗證、驗證者端、互通。
       本頁追蹤每個模組的真實狀態——包含還沒開始的，以及還沒解決的。
     </p>
-    <span class="draft-flag">草案 v0.8 · 2026-08-07 更新：ZK 證明在裝置上跑通、實機驗證全綠</span>
+    <span class="draft-flag">草案 v0.9 · 2026-08-08 更新：M2 完成——驗證金鑰改為本機推導，四個階段各自說實話</span>
   </header>
 
   <dl class="stats">
     <div class="stat stat--ok">
       <dt>已完成</dt>
-      <dd>19 <small>／ 32 項工作</small></dd>
+      <dd>22 <small>／ 33 項工作</small></dd>
     </div>
     <div class="stat">
       <dt>整體進度</dt>
-      <dd>62<small>%</small></dd>
+      <dd>67<small>%</small></dd>
     </div>
     <div class="stat stat--ok">
       <dt>測試</dt>
-      <dd>721 <small>／ 0 skipped</small></dd>
+      <dd>758 <small>／ 0 skipped</small></dd>
     </div>
     <div class="stat">
       <dt>負責人</dt>
@@ -787,17 +787,17 @@
       </article>
 
       <!-- M2 -->
-      <article class="ms ms--active">
+      <article class="ms ms--done">
         <div class="ms__rail"><span class="ms__id">M2</span><span class="ms__dot"></span></div>
         <div class="ms__body">
           <div class="ms__head">
             <h3 class="ms__title">本人可驗：TW FidO 簽章與 ZK 證明</h3>
-            <span class="ms__meta">豆泥 · 進行中</span>
+            <span class="ms__meta">豆泥 · 已完成</span>
           </div>
           <p class="ms__goal">接上 PSE 的 OpenAC，讓 App 能在本機產出「我持有有效自然人憑證」的零知識證明。</p>
           <div class="meter">
-            <div class="meter__bar"><div class="meter__fill" style="width:78%"></div></div>
-            <span class="meter__pct">78%</span>
+            <div class="meter__bar"><div class="meter__fill" style="width:100%"></div></div>
+            <span class="meter__pct">100%</span>
           </div>
           <ul class="tasks">
             <li>
@@ -836,14 +836,19 @@
               <span class="t-note">用<strong>真實的行動自然人憑證簽章</strong>跑完整條路：prove 6.34＋2.13 秒、verify 6.44＋2.19 秒、<code>linkVerify</code> 7.06 秒且<strong>回傳 true</strong>。記憶體峰值約 1.8 GB、安裝後資產 1.96 GB。<strong>驗證比產生還慢</strong>——站在查驗現場等的是驗證方，這個數字直接影響 M3 的設計。</span>
             </li>
             <li>
-              <span class="chip chip--todo">待辦</span>
+              <span class="chip chip--done">已完成</span>
               <span class="t-name">從證明金鑰推導驗證金鑰</span>
-              <span class="t-note">已用雜湊比對確認：驗證金鑰就是證明金鑰去掉最後 32 bytes 的完全相同前綴。<strong>約 968 MB 是可以在裝置上推導的，不必下載</strong>——下載量能從 1.96 GB 砍回約 1 GB。</span>
+              <span class="t-note">已在裝置上切檔並用真實證明驗收：推導出的位元組與下載檔 <code>contentsEqual</code> 相同，三項檢查對推導金鑰全數回傳 true，耗時 1.51 秒。<strong>更正上一版的數字</strong>：省下的是<em>傳輸量</em> 143.3 MB → 85.5 MB（57.8 MB），不是 968 MB；安裝後仍是 1.96 GB，因為檔案照樣要在磁碟上。真正的重點也不是流量——是驗證用的信任材料不再取自會變動的 <code>-latest</code> tag。</span>
             </li>
             <li>
-              <span class="chip chip--todo">待辦</span>
+              <span class="chip chip--done">已完成</span>
               <span class="t-name">修掉「約束未滿足卻回報成功」</span>
-              <span class="t-note"><code>tbs</code> 與簽章不符時，<code>prove</code> 會回傳一個大小、耗時都正常的 <code>ProofResult</code>（電路 assert 只印在 stderr），到驗證階段才以 <code>UniffiInternalError</code> 爆出，畫面顯示成「這支手機無法完成驗證」——把被拒絕的證明講成硬體小毛病。</span>
+              <span class="t-note">上游 <code>prove</code> 在 <code>tbs</code> 與簽章不符時仍回傳正常大小的 <code>ProofResult</code>（電路 assert 只印在 stderr），這是我們改不動的上游行為。改掉的是<em>我們怎麼講它</em>：驗證階段的 Rust panic 現在被辨識為「證明被拒絕」而非 <code>.unknown</code>，且 <code>ZKProver</code> 根本不會把被拒絕的證明交出來。畫面不再說「這支手機無法完成驗證」——第 3 階段照實顯示成功（兩組電路都跑完了），第 4 階段顯示「這支手機檢查了這份證明，並判定不通過」。</span>
+            </li>
+            <li>
+              <span class="chip chip--done">已完成</span>
+              <span class="t-name">四個階段的措辭稽核</span>
+              <span class="t-note">順手修掉兩個同類問題：每次成功執行其實驗證了<strong>兩次</strong>（報告拿到的是「熱」的第二次數字），以及推導檔案傳輸成本為零卻沿用下載措辭、對使用者顯示「下載 0 KB」。三項修正都以突變反向確認過會讓測試轉紅。</span>
             </li>
           </ul>
         </div>
@@ -1062,6 +1067,16 @@
         </thead>
         <tbody>
           <tr>
+            <td><strong>最小揭露只對查驗方成立，對內政部不成立</strong></td>
+            <td>TW FidO 的 SIGN 請求同時帶著身分證統一編號（原始值，非雜湊）、<code>sp_service_id</code> 與依賴方識別碼。也就是「這個人、這個時間、為這個依賴方取得簽章材料」——內政部在證明存在之前就看得一清二楚</td>
+            <td>誠實的說法是揭露對象<em>轉移</em>而非消失：櫃檯什麼都不知道，發證機關什麼都知道。畫面若只寫「不會顯示你的身分證字號」而不寫對誰，對櫃檯為真、對內政部為假。已列為每一份證明都帶著的 <code>idNumberDisclosedToIssuer</code> caveat</td>
+          </tr>
+          <tr>
+            <td><strong><code>signed_response</code> 是不會過期的持有者令牌</strong></td>
+            <td>簽章簽的是固定的 <code>app_id</code>，不是每次不同的挑戰值。任何拿到它的人——包含 SP 自己——都能無限期重複使用它產生證明。證明因此只能說「<em>某位</em>持卡人曾經取得簽章材料」，不能說「站在這裡的這個人」</td>
+            <td>已列為 <code>signatureMaterialIsReplayable</code>。真正的修法要上游把挑戰值綁進簽章範圍；在那之前不得有任何畫面把證明講成「本人在場」</td>
+          </tr>
+          <tr>
             <td>測試 SP 憑證是共用範例值</td>
             <td>開發無礙，但不能當成 bonds-tw 的正式身分；正式上線前仍須申請</td>
             <td>視為開發用鷹架。專屬 SP 申請與組織 Apple 帳號同批送，別因為「能跑了」而忘記</td>
@@ -1112,7 +1127,7 @@
   </section>
 
   <footer>
-    <div>本頁狀態為 2026-08-06 的實地盤點結果，隨施工進度更新。全部里程碑負責人：豆泥。</div>
+    <div>本頁狀態為 2026-08-08 的實地盤點結果，隨施工進度更新。全部里程碑負責人：豆泥。</div>
     <div>依據：<a href="https://blog.bonds.tw/litepaper/#50">《有備而來》白皮書第 5 章</a>、《行動自然人憑證應用程式介面規格書 v2.9》．上游 ZK 元件：<a href="https://github.com/privacy-ethereum/ZK-based-Proof-of-Personhood">privacy-ethereum/ZK-based-Proof-of-Personhood</a>．前案：<a href="https://github.com/thematters/zkid-personhood">thematters/zkid-personhood</a></div>
   </footer>
 
