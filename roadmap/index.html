@@ -571,21 +571,21 @@
       把白皮書第 5 章的「小密封罐」拆成可施工的模組：資料可驗、本人可驗、離線驗證、驗證者端、互通。
       本頁追蹤每個模組的真實狀態——包含還沒開始的，以及還沒解決的。
     </p>
-    <span class="draft-flag">草案 v1.0 · 2026-08-08 更新：ZK 證明接上離線查驗；量出查驗方要付的代價是 294 KB 與 14 秒</span>
+    <span class="draft-flag">草案 v1.1 · 2026-08-08 更新：M4 過半——驗證模式與示範場景落地；三個場景裡只有一個完全成立</span>
   </header>
 
   <dl class="stats">
     <div class="stat stat--ok">
       <dt>已完成</dt>
-      <dd>23 <small>／ 34 項工作</small></dd>
+      <dd>25 <small>／ 34 項工作</small></dd>
     </div>
     <div class="stat">
       <dt>整體進度</dt>
-      <dd>68<small>%</small></dd>
+      <dd>74<small>%</small></dd>
     </div>
     <div class="stat stat--ok">
       <dt>測試</dt>
-      <dd>769 <small>／ 0 skipped</small></dd>
+      <dd>774 <small>／ 0 skipped</small></dd>
     </div>
     <div class="stat">
       <dt>負責人</dt>
@@ -902,7 +902,7 @@
             <li>
               <span class="chip chip--todo">待辦</span>
               <span class="t-name">撤銷清單離線快照</span>
-              <span class="t-note">尚未做。目前查驗<strong>通過的結果會明白標示「離線狀態無法確認這份證件是否已被撤銷」</strong>——不給看起來無條件的綠勾。</span>
+              <span class="t-note">尚未做，但<strong>可行性已用實驗確認</strong>：只改 <code>smtRoot</code> 重產證明，instance 的穩定位置有 274 個跟著變 → <strong><code>smtRoot</code> 是公開輸入</strong>，查驗方原理上能自行得知證明用的是哪一份快照，不必相信持證方自述。（對照組救了這個實驗：instance 根本不是決定性的，相同輸入跑兩次完全不同，只有 2.6% 的位元組穩定。）<br>仍不能直接做：知道「哪些位元組會動」不等於知道怎麼解出 root，靠差分反推的位置做安全檢查就是這個 repo 一貫拒絕的格式猜測。<strong>需求已界定成一句話：請上游公佈 instance 的序列化格式。</strong>目前查驗通過仍明白標示「離線無法確認是否已被撤銷」。</span>
             </li>
           </ul>
         </div>
@@ -914,18 +914,18 @@
         <div class="ms__body">
           <div class="ms__head">
             <h3 class="ms__title">驗證者端與可示範場景</h3>
-            <span class="ms__meta">豆泥 · 相依 M3</span>
+            <span class="ms__meta">豆泥 · 進行中</span>
           </div>
           <p class="ms__goal">沒有驗證者，皮夾只是個人收藏。5.2 承諾要釋出一個「不連雲端、不記名、不留軌跡」的輕量驗證介面。</p>
           <div class="meter">
-            <div class="meter__bar"><div class="meter__fill" style="width:0%"></div></div>
-            <span class="meter__pct">0%</span>
+            <div class="meter__bar"><div class="meter__fill" style="width:50%"></div></div>
+            <span class="meter__pct">50%</span>
           </div>
           <ul class="tasks">
             <li>
-              <span class="chip chip--todo">待辦</span>
+              <span class="chip chip--done">已完成</span>
               <span class="t-name">驗證者 App（或同 App 的驗證模式）</span>
-              <span class="t-note"><code>Bondbear-vanilla</code> 的 <code>Views/ZK/</code> 已經有完整的請求→選證→驗證→成功／失敗流程可直接移植。</span>
+              <span class="t-note">走「同 App 的驗證模式」：憑證查驗（掃 QR）與 ZK 證明查驗（讀檔案）都在首頁「離線出示與查驗」底下。三種結果嚴格分開——「這支手機還沒下載查驗檔案」是查驗方自己的設定問題、「跑了但無法判定」什麼都沒說、只有三個布林全 true 才是通過，而且通過也一律把 caveat 攤開顯示。</span>
             </li>
             <li>
               <span class="chip chip--todo">待辦</span>
@@ -933,9 +933,9 @@
               <span class="t-note">白皮書 1.4 列為本期交付項目之一；<code>openac-rsa-x509-js</code> 提供瀏覽器內 WASM 證明，可掛在 bond-website 上。</span>
             </li>
             <li>
-              <span class="chip chip--todo">待辦</span>
+              <span class="chip chip--done">已完成</span>
               <span class="t-name">三個示範場景</span>
-              <span class="t-note">承平期：滿 18 歲、真人且唯一。緊急期：曾是台灣人。對應 5.3 的敘事。</span>
+              <span class="t-note">能力宣告寫進程式碼而不是投影片——demo 是最不歡迎但書、綠勾最有說服力的場合。結果三個裡<strong>只有一個完全成立</strong>：<br>• <strong>滿 18 歲：做不到。</strong>兩個電路吃的是憑證鏈與 RSA 簽章，輸入裡沒有任何日期欄位。VC 路徑有 <code>birthdate</code>，但它揭露的是日期本身而非述詞，且自簽可連結——用附在穩定識別碼上的完整生日回答「你滿 18 歲嗎」，是最小揭露的反面。<br>• <strong>真人且唯一：一半。</strong>「真人」成立；「且唯一」是 <code>noGlobalUniqueness</code>，離線沒有共享的已用 nullifier 紀錄。<br>• <strong>曾是台灣人：成立。</strong>這正是目前證明說的話，也是緊急期場景。</span>
             </li>
             <li>
               <span class="chip chip--todo">待辦</span>
