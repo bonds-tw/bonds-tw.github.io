@@ -571,21 +571,21 @@
       把白皮書第 5 章的「小密封罐」拆成可施工的模組：資料可驗、本人可驗、離線驗證、驗證者端、互通。
       本頁追蹤每個模組的真實狀態——包含還沒開始的，以及還沒解決的。
     </p>
-    <span class="draft-flag">草案 v0.9 · 2026-08-08 更新：M2 完成——驗證金鑰改為本機推導，四個階段各自說實話</span>
+    <span class="draft-flag">草案 v1.0 · 2026-08-08 更新：ZK 證明接上離線查驗；量出查驗方要付的代價是 294 KB 與 14 秒</span>
   </header>
 
   <dl class="stats">
     <div class="stat stat--ok">
       <dt>已完成</dt>
-      <dd>22 <small>／ 33 項工作</small></dd>
+      <dd>23 <small>／ 34 項工作</small></dd>
     </div>
     <div class="stat">
       <dt>整體進度</dt>
-      <dd>67<small>%</small></dd>
+      <dd>68<small>%</small></dd>
     </div>
     <div class="stat stat--ok">
       <dt>測試</dt>
-      <dd>758 <small>／ 0 skipped</small></dd>
+      <dd>769 <small>／ 0 skipped</small></dd>
     </div>
     <div class="stat">
       <dt>負責人</dt>
@@ -870,8 +870,8 @@
             順序上排在 M2 跑通之後。
           </p>
           <div class="meter">
-            <div class="meter__bar"><div class="meter__fill" style="width:60%"></div></div>
-            <span class="meter__pct">60%</span>
+            <div class="meter__bar"><div class="meter__fill" style="width:75%"></div></div>
+            <span class="meter__pct">75%</span>
           </div>
           <ul class="tasks">
             <li>
@@ -885,9 +885,14 @@
               <span class="t-note">整條查驗路徑<strong>零網路呼叫</strong>。補上了 did:key 反向解碼——先前驗證者拿到 issuer DID 卻還原不出公鑰，等於什麼都驗不了。雙層驗簽（VP ＋ 內層 VC）＋ challenge 比對 ＋ 時效。</span>
             </li>
             <li>
+              <span class="chip chip--done">已完成</span>
+              <span class="t-name">ZK 證明的出示與查驗</span>
+              <span class="t-note">在這之前 M2 與 M3 是兩條互不相通的路：<code>ZKProofBundle</code> 全 app 只有最小揭露畫面引用，整個出示層不知道它存在——能產證明但出示不了，能離線出示但（自發行 VC 帶固定 did:key）可被連結。現在有了封裝格式（四個檔案＋caveat＋持證方自檢）、查驗方 <code>ZKPackageVerifier</code>、以及首頁的「查驗零知識證明」入口。<strong>見證檔案永遠不會被打包</strong>（有測試釘住），caveat 一律攤開顯示不收在展開箭頭後面。</span>
+            </li>
+            <li>
               <span class="chip chip--partial">半完成</span>
               <span class="t-name">點對點傳輸層</span>
-              <span class="t-note">QR 已完成（含分片與輪播——一份中文 VC 的 JWS 實測 3,076 bytes，塞不進單張）。Wi-Fi Aware／藍牙／NFC 尚未做；QR 本來就是零依賴的退路，先有它比較實際。</span>
+              <span class="t-note">QR 已完成（含分片與輪播——一份中文 VC 的 JWS 實測 3,076 bytes，塞不進單張）。Wi-Fi Aware／藍牙／NFC 仍未做。<strong>這一項的性質變了</strong>：ZK 證明實測要交到查驗方手上的總量是 <strong>293,916 bytes</strong>（兩份 proof ＋ 兩份 instance），在 QR 每張 2,953 bytes 的上限下要<strong>約 100 張</strong>。差兩個數量級，不是調參數能解決的。所以 ZK 出示目前走檔案（AirDrop／檔案 App），而傳輸層從「有比較好」變成 ZK 路徑的必要條件。</span>
             </li>
             <li>
               <span class="chip chip--spike">技術驗證</span>
