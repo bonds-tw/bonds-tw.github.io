@@ -571,7 +571,7 @@
       把白皮書第 5 章的「小密封罐」拆成可施工的模組：資料可驗、本人可驗、離線驗證、驗證者端、互通。
       本頁追蹤每個模組的真實狀態——包含還沒開始的，以及還沒解決的。
     </p>
-    <span class="draft-flag">草案 v1.3 · 2026-08-09 更新：M4 完成——展示頁已上線 mashbean.net/zkp-verify/</span>
+    <span class="draft-flag">草案 v1.4 · 2026-08-09 更新：M4 完成；M5 起步——選擇性揭露機制落地</span>
   </header>
 
   <dl class="stats">
@@ -585,7 +585,7 @@
     </div>
     <div class="stat stat--ok">
       <dt>測試</dt>
-      <dd>793 <small>／ 0 skipped</small></dd>
+      <dd>802 <small>／ 0 skipped</small></dd>
     </div>
     <div class="stat">
       <dt>負責人</dt>
@@ -956,8 +956,8 @@
           </div>
           <p class="ms__goal">讓這個皮夾不是孤島。5.2 把它定位為「未來計劃」，所以排在最後，但資料模型現在就要留好接口。</p>
           <div class="meter">
-            <div class="meter__bar"><div class="meter__fill" style="width:0%"></div></div>
-            <span class="meter__pct">0%</span>
+            <div class="meter__bar"><div class="meter__fill" style="width:20%"></div></div>
+            <span class="meter__pct">20%</span>
           </div>
           <ul class="tasks">
             <li>
@@ -966,9 +966,9 @@
               <span class="t-note">與現有 OpenID 生態接軌，避免日後重複遷移成本。</span>
             </li>
             <li>
-              <span class="chip chip--todo">待辦</span>
+              <span class="chip chip--partial">半完成</span>
               <span class="t-name">VP 呈現與 Schema 標準化</span>
-              <span class="t-note">讓驗證端能以少量計算完成核實。</span>
+              <span class="t-note">選擇性揭露的底層機制完成（SD-JWT 式加鹽承諾）。這是「滿 18 歲」真正的擋路點——不是電路，是資料模型：目前出示會交出<strong>整個</strong> <code>credentialSubject</code>，等於為了證明年齡而連身分證字號與戶籍地址一起給出去。<br>三個安全性質都以突變反向確認過會轉紅：<strong>每條揭露各加 128 bits 鹽</strong>（否則 <code>nationality</code> 十來種、<code>birthdate</code> 約四萬種可能值都能枚舉還原）、<strong>承諾摘要排序</strong>（否則位置洩漏哪個摘要對應哪個欄位）、<strong>拒收未被承諾的揭露</strong>（否則持證方能宣稱任何事）。尚未接進出示流程與 UI，也還沒對齊 OID4VP 的線上格式。</span>
             </li>
             <li>
               <span class="chip chip--todo">待辦</span>
