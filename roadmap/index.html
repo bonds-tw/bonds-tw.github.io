@@ -571,21 +571,21 @@
       把白皮書第 5 章的「小密封罐」拆成可施工的模組：資料可驗、本人可驗、離線驗證、驗證者端、互通。
       本頁追蹤每個模組的真實狀態——包含還沒開始的，以及還沒解決的。
     </p>
-    <span class="draft-flag">草案 v1.1 · 2026-08-08 更新：M4 過半——驗證模式與示範場景落地；三個場景裡只有一個完全成立</span>
+    <span class="draft-flag">草案 v1.2 · 2026-08-09 更新：M4 剩官網展示頁；並修好「MyData 抓完資料就不見了」</span>
   </header>
 
   <dl class="stats">
     <div class="stat stat--ok">
       <dt>已完成</dt>
-      <dd>25 <small>／ 34 項工作</small></dd>
+      <dd>26 <small>／ 34 項工作</small></dd>
     </div>
     <div class="stat">
       <dt>整體進度</dt>
-      <dd>74<small>%</small></dd>
+      <dd>76<small>%</small></dd>
     </div>
     <div class="stat stat--ok">
       <dt>測試</dt>
-      <dd>774 <small>／ 0 skipped</small></dd>
+      <dd>793 <small>／ 0 skipped</small></dd>
     </div>
     <div class="stat">
       <dt>負責人</dt>
@@ -918,8 +918,8 @@
           </div>
           <p class="ms__goal">沒有驗證者，皮夾只是個人收藏。5.2 承諾要釋出一個「不連雲端、不記名、不留軌跡」的輕量驗證介面。</p>
           <div class="meter">
-            <div class="meter__bar"><div class="meter__fill" style="width:50%"></div></div>
-            <span class="meter__pct">50%</span>
+            <div class="meter__bar"><div class="meter__fill" style="width:75%"></div></div>
+            <span class="meter__pct">75%</span>
           </div>
           <ul class="tasks">
             <li>
@@ -938,9 +938,9 @@
               <span class="t-note">能力宣告寫進程式碼而不是投影片——demo 是最不歡迎但書、綠勾最有說服力的場合。結果三個裡<strong>只有一個完全成立</strong>：<br>• <strong>滿 18 歲：做不到。</strong>兩個電路吃的是憑證鏈與 RSA 簽章，輸入裡沒有任何日期欄位。VC 路徑有 <code>birthdate</code>，但它揭露的是日期本身而非述詞，且自簽可連結——用附在穩定識別碼上的完整生日回答「你滿 18 歲嗎」，是最小揭露的反面。<br>• <strong>真人且唯一：一半。</strong>「真人」成立；「且唯一」是 <code>noGlobalUniqueness</code>，離線沒有共享的已用 nullifier 紀錄。<br>• <strong>曾是台灣人：成立。</strong>這正是目前證明說的話，也是緊急期場景。</span>
             </li>
             <li>
-              <span class="chip chip--todo">待辦</span>
+              <span class="chip chip--done">已完成</span>
               <span class="t-name">信任清單治理</span>
-              <span class="t-note">5.2 要求「緊急時可切換鏡像簽發者」。先定出清單格式與承諾值機制，上鏈可以晚一步。</span>
+              <span class="t-note">格式與承諾值機制完成，上鏈仍是後面一步（而且屆時什麼都不用改——只是多一個 <code>expectedCommitment</code> 的來源）。<strong>刻意不是一份用抓的清單</strong>：那正是攻擊者可以在它存在的那場緊急狀況中掉包的東西，而且離線不能用。改成一份帶承諾值的文件，摘要取在<em>正規形式</em>而非收到的檔案（JSON 鍵序隨編碼器而異，兩個由不同途徑拿到同一份清單的查驗方必須算出同一個值）。<strong>刻意不簽章</strong>：簽章會引出「誰簽的」，而在憲政緊急狀態下發證機關本身可能正是失聯或不可信的那一方——那個答案事前沒人能取得共識。已釘住：發佈順序不影響摘要、改顯示名稱會改摘要、把鏡像升成主要簽發者會改摘要。</span>
             </li>
           </ul>
         </div>
