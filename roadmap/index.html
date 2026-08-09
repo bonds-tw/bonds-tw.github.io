@@ -571,17 +571,17 @@
       把白皮書第 5 章的「小密封罐」拆成可施工的模組：資料可驗、本人可驗、離線驗證、驗證者端、互通。
       本頁追蹤每個模組的真實狀態——包含還沒開始的，以及還沒解決的。
     </p>
-    <span class="draft-flag">草案 v1.2 · 2026-08-09 更新：M4 剩官網展示頁；並修好「MyData 抓完資料就不見了」</span>
+    <span class="draft-flag">草案 v1.3 · 2026-08-09 更新：M4 完成——展示頁已上線 mashbean.net/zkp-verify/</span>
   </header>
 
   <dl class="stats">
     <div class="stat stat--ok">
       <dt>已完成</dt>
-      <dd>26 <small>／ 34 項工作</small></dd>
+      <dd>27 <small>／ 34 項工作</small></dd>
     </div>
     <div class="stat">
       <dt>整體進度</dt>
-      <dd>76<small>%</small></dd>
+      <dd>79<small>%</small></dd>
     </div>
     <div class="stat stat--ok">
       <dt>測試</dt>
@@ -914,12 +914,12 @@
         <div class="ms__body">
           <div class="ms__head">
             <h3 class="ms__title">驗證者端與可示範場景</h3>
-            <span class="ms__meta">豆泥 · 進行中</span>
+            <span class="ms__meta">豆泥 · 已完成</span>
           </div>
           <p class="ms__goal">沒有驗證者，皮夾只是個人收藏。5.2 承諾要釋出一個「不連雲端、不記名、不留軌跡」的輕量驗證介面。</p>
           <div class="meter">
-            <div class="meter__bar"><div class="meter__fill" style="width:75%"></div></div>
-            <span class="meter__pct">75%</span>
+            <div class="meter__bar"><div class="meter__fill" style="width:100%"></div></div>
+            <span class="meter__pct">100%</span>
           </div>
           <ul class="tasks">
             <li>
@@ -928,9 +928,9 @@
               <span class="t-note">走「同 App 的驗證模式」：憑證查驗（掃 QR）與 ZK 證明查驗（讀檔案）都在首頁「離線出示與查驗」底下。三種結果嚴格分開——「這支手機還沒下載查驗檔案」是查驗方自己的設定問題、「跑了但無法判定」什麼都沒說、只有三個布林全 true 才是通過，而且通過也一律把 caveat 攤開顯示。</span>
             </li>
             <li>
-              <span class="chip chip--todo">待辦</span>
+              <span class="chip chip--done">已完成</span>
               <span class="t-name">官網上的 ZKP 驗證展示頁</span>
-              <span class="t-note">白皮書 1.4 列為本期交付項目之一；<code>openac-rsa-x509-js</code> 提供瀏覽器內 WASM 證明，可掛在 bond-website 上。</span>
+              <span class="t-note">已上線：<a href="https://mashbean.net/zkp-verify/">mashbean.net/zkp-verify/</a>（先掛在部落格測試，之後再整合進 bond-website）。<strong>刻意不做完整密碼學驗證</strong>——那需要解壓後約 968 MB 的驗證金鑰，瀏覽器分頁裝不下；而且實測是<em>計算受限</em>而非 I/O 受限（968 MB 冷讀 0.59 秒、三項檢查約 14 秒），所以「先下載金鑰再驗」也解決不了。做一個假裝能驗的頁面，正好違反這個專案一直在守的線。<br>它做真的做得到的事：解開 App 匯出的 <code>.zkproof</code>，列出四個檔案與大小、換算 QR frame 數、顯示持證方自述（並標明那是被查驗一方的說法、可能是假的），以及逐條列出證明自帶的但書。檔案不上傳。但書文字與 App 的 <code>ProofCaveat.localizedDescription</code> 逐字對齊。</span>
             </li>
             <li>
               <span class="chip chip--done">已完成</span>
