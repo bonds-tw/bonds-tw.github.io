@@ -2,7 +2,7 @@
   "applinks": {
     "details": [
       {
-        "appID": "G4JB6X9K6T.org.denkeni.backupTW",
+        "appIDs": ["538MCM44UX.tw.bonds.backupTW"],
         "components": [
           {
             "/": "*"
