@@ -564,14 +564,14 @@
       <span>／</span>
       <span>有備而來 · Bond for the Future</span>
       <span>／</span>
-      <span>2026-08-06</span>
+      <span>2026-08-10</span>
     </div>
     <h1>工程藍圖與進度</h1>
     <p class="standfirst">
       把白皮書第 5 章的「小密封罐」拆成可施工的模組：資料可驗、本人可驗、離線驗證、驗證者端、互通。
       本頁追蹤每個模組的真實狀態——包含還沒開始的，以及還沒解決的。
     </p>
-    <span class="draft-flag">草案 v1.4 · 2026-08-09 更新：M4 完成；M5 起步——選擇性揭露機制落地</span>
+    <span class="draft-flag">草案 v1.5 · 2026-08-10 更新：選擇性揭露接進出示流程；離線撤銷檢查（卡片簽章路徑）；姓名扣不住這件事已改成說實話</span>
   </header>
 
   <dl class="stats">
@@ -585,7 +585,7 @@
     </div>
     <div class="stat stat--ok">
       <dt>測試</dt>
-      <dd>802 <small>／ 0 skipped</small></dd>
+      <dd>939 <small>／ 2 skipped（沒設 ZK_BENCH_DIR 時的實測 spike）</small></dd>
     </div>
     <div class="stat">
       <dt>負責人</dt>
@@ -628,10 +628,22 @@
         <strong>簽署金鑰確實在 Secure Enclave</strong>、憑證確實帶著 <code>NSFileProtectionCompleteUnlessOpen</code>。
       </p>
       <p>
-        <strong>仍未解</strong>：上游三個 ZK 元件的 repo 至今仍沒有 LICENSE 檔
-        （<code>openac-rsa-x509-swift</code>、<code>go-zkid-verifier</code>、<code>moica-revocation-smt</code>；
-        只有電路本體 <code>zkID</code> 是 MIT）。依 PSE 書面回覆為 MIT 動工，
-        但第三方無法驗證這件事——對一個承諾開源 SDK 的專案，這仍是硬傷。
+        <strong>已解除</strong>：上游授權條款已補齊。這一欄先前寫著三個 ZK 元件的 repo 都沒有
+        LICENSE 檔，那句話從 2026-08-07 起就不再為真，而它在這頁上多留了三天——
+        <code>openac-rsa-x509-swift</code> 在 <code>cce06e1a</code> 補上 LICENSE-APACHE 與 LICENSE-MIT，
+        <code>go-zkid-verifier</code> 同樣兩份，<code>moica-revocation-smt</code> 有 LICENSE。
+        依 PSE 書面回覆動工的那段期間結束了：現在第三方從上游原始碼就驗得到同一組條款。
+      </p>
+      <p>
+        真正該記在我們自己帳上的是：本專案的 <code>Package.resolved</code> 一直釘在
+        <code>4a53fba</code>——正好是補授權的前一個 commit——所以那三天是真的在對一份
+        沒有授權檔的快照建置。已 bump 到 <code>cce06e1a</code>；那兩個 commit 之間的差異
+        只有兩個 LICENSE 檔與 README 九行，沒有任何程式碼變動。
+      </p>
+      <p>
+        <strong>仍未解</strong>：組織 Apple Developer 帳號（要 D-U-N-S）與 bonds-tw 專屬
+        TW FidO SP，兩者都要走行政流程。目前用的 <code>sp_service_id</code> 與規格書 v2.9
+        的公開範例值逐字元相同，是模擬測試共用識別碼——開發夠用，正式上線不行。
       </p>
     </div>
   </section>
@@ -717,7 +729,7 @@
             <li>
               <span class="chip chip--done">已完成</span>
               <span class="t-name">補上開源授權條款</span>
-              <span class="t-note">Apache-2.0（相容 MIT 相依、對齊上游 mopro、含專利授權）。⚠️ 但 <code>openac-rsa-x509-swift</code>、<code>go-zkid-verifier</code>、<code>moica-revocation-smt</code> 上游都還沒有授權條款，正式版依賴前須請 PSE 補上。</span>
+              <span class="t-note">Apache-2.0（相容 MIT 相依、對齊上游 mopro、含專利授權）。上游三個元件原本都沒有授權條款，2026-08-07 起已補齊（前兩者為 Apache/MIT 雙授權，後者為 LICENSE）；本專案的 SPM pin 已一併 bump 到補授權後的 revision。</span>
             </li>
             <li>
               <span class="chip chip--partial">半完成</span>
@@ -818,7 +830,7 @@
             <li>
               <span class="chip chip--done">已完成</span>
               <span class="t-name">整合 <code>openac-rsa-x509-swift</code></span>
-              <span class="t-note">SPM 相依已接上，六個 API 實測連結成功。二進位框架含模擬器切片，所以不受實機問題影響。⚠️ 該 repo 至今仍無 LICENSE 檔（<code>go-zkid-verifier</code>、<code>moica-revocation-smt</code> 也是）；依 PSE 書面回覆為 MIT 動工，但仍應請他們補進 repo，否則第三方無法驗證。</span>
+              <span class="t-note">SPM 相依已接上，六個 API 實測連結成功。二進位框架含模擬器切片，所以不受實機問題影響。授權條款原本缺席、依 PSE 書面回覆動工；2026-08-07 上游補上 Apache/MIT 雙授權，本專案的 pin 已 bump 到該 commit。</span>
             </li>
             <li>
               <span class="chip chip--done">已完成</span>
@@ -900,9 +912,9 @@
               <span class="t-note">仍未決。這一輪做的是 VC 出示，不是 ZK 的 nullifier，所以還沒碰到。<strong>但已經確認一個更根本的問題</strong>：自發行 VC 帶固定 did:key，<strong>每次出示都可被連結</strong>——與白皮書的不可連結性衝突，解法是 ZK 選擇性揭露。</span>
             </li>
             <li>
-              <span class="chip chip--todo">待辦</span>
+              <span class="chip chip--partial">半完成</span>
               <span class="t-name">撤銷清單離線快照</span>
-              <span class="t-note">尚未做，但<strong>可行性已用實驗確認</strong>：只改 <code>smtRoot</code> 重產證明，instance 的穩定位置有 274 個跟著變 → <strong><code>smtRoot</code> 是公開輸入</strong>，查驗方原理上能自行得知證明用的是哪一份快照，不必相信持證方自述。（對照組救了這個實驗：instance 根本不是決定性的，相同輸入跑兩次完全不同，只有 2.6% 的位元組穩定。）<br>仍不能直接做：知道「哪些位元組會動」不等於知道怎麼解出 root，靠差分反推的位置做安全檢查就是這個 repo 一貫拒絕的格式猜測。<strong>需求已界定成一句話：請上游公佈 instance 的序列化格式。</strong>目前查驗通過仍明白標示「離線無法確認是否已被撤銷」。</span>
+              <span class="t-note"><strong>卡片簽章路徑已完成。</strong>這一欄先前整個被記成擋在上游，而那只對 ZK 路徑成立——查驗方直接驗卡片簽章時，手上就有持卡人的憑證，而 MOICA 的撤銷樹就是用憑證序號當 key。<code>createSmtProofFromGz</code> 早就在 API 裡，快照也早就在下載，中間那段程式碼是唯一缺的東西。<br>誠實的界線寫進了程式碼與畫面：裝置能確立的是「這個序號不在這支手機持有的這份快照裡」，而快照自述了製作時間；<strong>不能</strong>確立那份快照是真正的當前版本（那要讀鏈上 root，是網路呼叫）。所以畫面永遠不說沒有限定語的「未被撤銷」，並多印一行名單製作日期。查到序號在名單裡則整份拒絕——過期名單會漏報，不會誤報。<br><strong>ZK 路徑仍擋在上游</strong>：要把證明綁上快照需要 <code>smtRoot</code> 這個公開輸入，而那些訊號過不了 iOS FFI（<a href="https://github.com/privacy-ethereum/zkID/issues/105">zkID#105</a>）。實驗確認過 <code>smtRoot</code> 確實是公開輸入（只改它重產證明，instance 有 274 個穩定位置跟著變），但知道「哪些位元組會動」不等於知道怎麼解出 root。需求仍是一句話：請上游公佈 instance 的序列化格式。</span>
             </li>
           </ul>
         </div>
@@ -935,7 +947,7 @@
             <li>
               <span class="chip chip--done">已完成</span>
               <span class="t-name">三個示範場景</span>
-              <span class="t-note">能力宣告寫進程式碼而不是投影片——demo 是最不歡迎但書、綠勾最有說服力的場合。結果三個裡<strong>只有一個完全成立</strong>：<br>• <strong>滿 18 歲：做不到。</strong>兩個電路吃的是憑證鏈與 RSA 簽章，輸入裡沒有任何日期欄位。VC 路徑有 <code>birthdate</code>，但它揭露的是日期本身而非述詞，且自簽可連結——用附在穩定識別碼上的完整生日回答「你滿 18 歲嗎」，是最小揭露的反面。<br>• <strong>真人且唯一：一半。</strong>「真人」成立；「且唯一」是 <code>noGlobalUniqueness</code>，離線沒有共享的已用 nullifier 紀錄。<br>• <strong>曾是台灣人：成立。</strong>這正是目前證明說的話，也是緊急期場景。</span>
+              <span class="t-note">能力宣告寫進程式碼而不是投影片——demo 是最不歡迎但書、綠勾最有說服力的場合。結果三個裡<strong>只有一個完全成立</strong>：<br>• <strong>滿 18 歲：一半，而且先前那句「做不到」是錯的。</strong>電路那半仍然成立（兩個電路吃的是憑證鏈與 RSA 簽章，輸入裡沒有任何日期欄位），但把它寫成「這件事做不到」是把「目前這條路做不到」講成了別的意思。現在的做法是在發證當下由行憑一起簽一個述詞欄位 <code>over18AtIssuance</code>——名字指的是「那一刻為真」，因為卡片簽的是當下的事實——出示時可以只揭露那一項而不揭露出生日期。仍然是一半：憑證帶著持卡人姓名（見下方風險欄），所以這不是不可連結的年齡證明。<br>• <strong>真人且唯一：一半。</strong>「真人」成立；「且唯一」是 <code>noGlobalUniqueness</code>，離線沒有共享的已用 nullifier 紀錄。<br>• <strong>曾是台灣人：成立。</strong>這正是目前證明說的話，也是緊急期場景。</span>
             </li>
             <li>
               <span class="chip chip--done">已完成</span>
@@ -968,7 +980,7 @@
             <li>
               <span class="chip chip--partial">半完成</span>
               <span class="t-name">VP 呈現與 Schema 標準化</span>
-              <span class="t-note">選擇性揭露的底層機制完成（SD-JWT 式加鹽承諾）。這是「滿 18 歲」真正的擋路點——不是電路，是資料模型：目前出示會交出<strong>整個</strong> <code>credentialSubject</code>，等於為了證明年齡而連身分證字號與戶籍地址一起給出去。<br>三個安全性質都以突變反向確認過會轉紅：<strong>每條揭露各加 128 bits 鹽</strong>（否則 <code>nationality</code> 十來種、<code>birthdate</code> 約四萬種可能值都能枚舉還原）、<strong>承諾摘要排序</strong>（否則位置洩漏哪個摘要對應哪個欄位）、<strong>拒收未被承諾的揭露</strong>（否則持證方能宣稱任何事）。尚未接進出示流程與 UI，也還沒對齊 OID4VP 的線上格式。</span>
+              <span class="t-note">選擇性揭露的底層機制完成（SD-JWT 式加鹽承諾）。這曾是「滿 18 歲」真正的擋路點——不是電路，是資料模型：當時出示會交出<strong>整個</strong> <code>credentialSubject</code>，等於為了證明年齡而連身分證字號與戶籍地址一起給出去。那一點已經解掉了。<br>三個安全性質都以突變反向確認過會轉紅：<strong>每條揭露各加 128 bits 鹽</strong>（否則 <code>nationality</code> 十來種、<code>birthdate</code> 約四萬種可能值都能枚舉還原）、<strong>承諾摘要排序</strong>（否則位置洩漏哪個摘要對應哪個欄位）、<strong>拒收未被承諾的揭露</strong>（否則持證方能宣稱任何事）。已接進出示流程與 UI：出示前每個欄位一個開關、<strong>預設全部關閉</strong>，按鈕寫「出示 N 個欄位」，查驗方會看到「另外保留了 N 個欄位」。<code>credentialSubject</code> 現在只剩 <code>id</code>，其餘全進 <code>_sd</code>——留在明文裡的欄位就是持有人永遠無法扣住的欄位。<br><strong>但有一個欄位扣不住，而畫面一度承諾扣得住</strong>：姓名寫在替憑證簽章的 X.509 憑證的 Subject CN 裡，而查驗方需要那張憑證才能驗簽。X.509 沒有選擇性揭露，所以這是結構性的。該開關已經拿掉，改成一行「一定會被看到」的說明。還沒對齊 OID4VP 的線上格式。</span>
             </li>
             <li>
               <span class="chip chip--todo">待辦</span>
@@ -1113,8 +1125,13 @@
           </tr>
           <tr>
             <td>MyData 無文件級簽章</td>
-            <td>自發行 VC 的資料真實性只能靠使用者背書</td>
-            <td>白皮書已列為已知限制；資料模型預留信任根替換位（見 D-04）</td>
+            <td>憑證上的欄位事實只能靠持卡人背書。發證已改由持卡人的自然人憑證簽章（不再是裝置自簽），所以查驗方能確認「這位具名持卡人主張這些值」——但無法確認內政部核可過這些值，因為 MyData 的下載檔本身沒有任何簽章（2026-08-09 實測）</td>
+            <td>白皮書已列為已知限制；畫面上以「這位持卡人主張」而非「政府認證」表述；資料模型預留信任根替換位</td>
+          </tr>
+          <tr>
+            <td><strong>卡片簽章路徑無法不可連結，而且洩漏的是姓名本身</strong></td>
+            <td>查驗方必須拿到持卡人的 X.509 憑證才能驗簽，而該憑證的 Subject CN 就是法定姓名，另帶憑證序號與 RSA 公鑰。所以這不是「兩個查驗方能對出是同一人」，是「每一個查驗方都直接知道你是誰」。持有人就算不揭露姓名欄位也一樣——這一點畫面一度承諾得到而做不到，已於 2026-08-10 修正</td>
+            <td>結構性，改架構解不掉：X.509 沒有選擇性揭露，CA 的簽章覆蓋整份 TBSCertificate。唯一的解法是不送憑證、改在電路內證明憑證鏈——也就是 ZK 路徑，而 zkID 現有電路做不到（<code>user_sig</code> 簽的是固定 <code>app_id</code>，<code>cert_chain</code> 不吃訊息）。目前的動作是把它明白寫在出示前與查驗結果兩個畫面上</td>
           </tr>
           <tr>
             <td>上游 API 或格式變動</td>
@@ -1132,7 +1149,7 @@
   </section>
 
   <footer>
-    <div>本頁狀態為 2026-08-08 的實地盤點結果，隨施工進度更新。全部里程碑負責人：豆泥。</div>
+    <div>本頁狀態為 2026-08-10 的實地盤點結果，隨施工進度更新。全部里程碑負責人：豆泥。</div>
     <div>依據：<a href="https://blog.bonds.tw/litepaper/#50">《有備而來》白皮書第 5 章</a>、《行動自然人憑證應用程式介面規格書 v2.9》．上游 ZK 元件：<a href="https://github.com/privacy-ethereum/ZK-based-Proof-of-Personhood">privacy-ethereum/ZK-based-Proof-of-Personhood</a>．前案：<a href="https://github.com/thematters/zkid-personhood">thematters/zkid-personhood</a></div>
   </footer>
 
