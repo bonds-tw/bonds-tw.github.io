@@ -585,7 +585,7 @@
     </div>
     <div class="stat stat--ok">
       <dt>測試</dt>
-      <dd>951 <small>／ 2 skipped（沒設 ZK_BENCH_DIR 時的實測 spike）</small></dd>
+      <dd>1009 <small>／ 2 skipped（沒設 ZK_BENCH_DIR 時的實測 spike）</small></dd>
     </div>
     <div class="stat">
       <dt>負責人</dt>
@@ -904,7 +904,7 @@
             <li>
               <span class="chip chip--partial">半完成</span>
               <span class="t-name">點對點傳輸層</span>
-              <span class="t-note">QR 已完成（含分片與輪播——一份中文 VC 的 JWS 實測 3,076 bytes，塞不進單張）。Wi-Fi Aware／藍牙／NFC 仍未做。<strong>這一項的性質變了</strong>：ZK 證明實測要交到查驗方手上的總量是 <strong>293,916 bytes</strong>（兩份 proof ＋ 兩份 instance），在 QR 每張 2,953 bytes 的上限下要<strong>約 100 張</strong>。差兩個數量級，不是調參數能解決的。所以 ZK 出示目前走檔案（AirDrop／檔案 App），而傳輸層從「有比較好」變成 ZK 路徑的必要條件。</span>
+              <span class="t-note">QR 與<strong>藍牙</strong>都已完成，兩個方向都通過實機驗證（2026-08-13，iPhone 14 ↔ Mac，對齊 ISO 18013-5 的 mdoc peripheral server mode：持有人廣播、查驗方連線）。Wi-Fi Aware／NFC 仍未做。<strong>先前這一格的三個數字都是錯的，一併更正</strong>：ZK 證明交到查驗方手上的總量，用真卡量是 <strong>398,181 bytes</strong>（不是 293,916——那是拿上游範例輸入量的）；而決定張數的不是 QR v40 的 2,953 bytes，是本專案為了隔著螢幕掃得到、把符號釘在 89 modules ＋ ECC Q 之後的 <strong>364 bytes</strong>。所以是 <strong>824 張、一輪約 453 秒</strong>，不是約 100 張——而且根本走不到那一步，<code>QRTransport</code> 對超過 64 KB 的 payload 直接拒絕、連分片都不分。<strong>QR 那條路不是慢，是不存在。</strong>同一份走藍牙是 597 frames、<strong>21.72 秒</strong>（實測 13.8 kB/s 穩態；先前推估的 8.6 秒是拿 12 frames 的暖機速率外推，碰不到 back-pressure）。</span>
             </li>
             <li>
               <span class="chip chip--spike">技術驗證</span>
@@ -914,7 +914,7 @@
             <li>
               <span class="chip chip--partial">半完成</span>
               <span class="t-name">撤銷清單離線快照</span>
-              <span class="t-note"><strong>卡片簽章路徑已完成。</strong>這一欄先前整個被記成擋在上游，而那只對 ZK 路徑成立——查驗方直接驗卡片簽章時，手上就有持卡人的憑證，而 MOICA 的撤銷樹就是用憑證序號當 key。<code>createSmtProofFromGz</code> 早就在 API 裡，快照也早就在下載，中間那段程式碼是唯一缺的東西。<br>誠實的界線寫進了程式碼與畫面：裝置能確立的是「這個序號不在這支手機持有的這份快照裡」，而快照自述了製作時間；<strong>不能</strong>確立那份快照是真正的當前版本（那要讀鏈上 root，是網路呼叫）。所以畫面永遠不說沒有限定語的「未被撤銷」，並多印一行名單製作日期。查到序號在名單裡則整份拒絕——過期名單會漏報，不會誤報。<br><strong>ZK 路徑仍擋在上游</strong>：要把證明綁上快照需要 <code>smtRoot</code> 這個公開輸入，而那些訊號過不了 iOS FFI（<a href="https://github.com/privacy-ethereum/zkID/issues/105">zkID#105</a>）。實驗確認過 <code>smtRoot</code> 確實是公開輸入（只改它重產證明，instance 有 274 個穩定位置跟著變），但知道「哪些位元組會動」不等於知道怎麼解出 root。需求仍是一句話：請上游公佈 instance 的序列化格式。</span>
+              <span class="t-note"><strong>卡片簽章路徑已完成。</strong>這一欄先前整個被記成擋在上游，而那只對 ZK 路徑成立——查驗方直接驗卡片簽章時，手上就有持卡人的憑證，而 MOICA 的撤銷樹就是用憑證序號當 key。<code>createSmtProofFromGz</code> 早就在 API 裡，快照也早就在下載，中間那段程式碼是唯一缺的東西。<br>誠實的界線寫進了程式碼與畫面：裝置能確立的是「這個序號不在這支手機持有的這份快照裡」，而快照自述了製作時間；<strong>不能</strong>確立那份快照是真正的當前版本（那要讀鏈上 root，是網路呼叫）。所以畫面永遠不說沒有限定語的「未被撤銷」，並多印一行名單製作日期。查到序號在名單裡則整份拒絕——過期名單會漏報，不會誤報。<br><strong>ZK 路徑仍擋在上游</strong>：要把證明綁上快照需要 <code>smtRoot</code> 這個公開輸入，而那些訊號過不了 iOS FFI（<a href="https://github.com/privacy-ethereum/zkID/issues/105">zkID#105</a>）。實驗確認過 <code>smtRoot</code> 確實是公開輸入（只改它重產證明，instance 有 274 個穩定位置跟著變），但知道「哪些位元組會動」不等於知道怎麼解出 root。需求仍是一句話：<strong>請在 iOS 靜態庫匯出 signals accessor</strong>（Rust shim 早就有 <code>zk_last_signals()</code>，是 <code>mopro.swift</code> 的公開介面只從 <code>linkVerify</code>／<code>verifyCertChainRs4096</code>／<code>verifyUserSigRs2048</code> 回 Bool）。<strong>先前這裡寫的是「請上游公佈 instance 的序列化格式」——那是在要一個早就給了的東西</strong>：<code>go-zkid-verifier/verifier/public_inputs.go</code> 逐行寫出三種佈局（RS2048 19 個訊號、RS4096 36 個、user_sig 4 個），本專案的 <code>ZKPublicInputs.swift</code> 也已經照著重寫並用 Go 的向量對過。要錯東西的請求，會一直掛著沒人回。</span>
             </li>
           </ul>
         </div>
@@ -950,10 +950,9 @@
               <span class="t-note">能力宣告寫進程式碼而不是投影片——demo 是最不歡迎但書、綠勾最有說服力的場合。結果三個裡<strong>只有一個完全成立</strong>：<br>• <strong>滿 18 歲：一半，而且先前那句「做不到」是錯的。</strong>電路那半仍然成立（兩個電路吃的是憑證鏈與 RSA 簽章，輸入裡沒有任何日期欄位），但把它寫成「這件事做不到」是把「目前這條路做不到」講成了別的意思。現在的做法是在發證當下由行憑一起簽一個述詞欄位 <code>over18AtIssuance</code>——名字指的是「那一刻為真」，因為卡片簽的是當下的事實——出示時可以只揭露那一項而不揭露出生日期。仍然是一半：憑證帶著持卡人姓名（見下方風險欄），所以這不是不可連結的年齡證明。<br>• <strong>真人且唯一：一半。</strong>「真人」成立；「且唯一」是 <code>noGlobalUniqueness</code>，離線沒有共享的已用 nullifier 紀錄。<br>• <strong>曾是台灣人：成立。</strong>這正是目前證明說的話，也是緊急期場景。</span>
             </li>
             <li>
-              <span class="chip chip--done">已完成</span>
+              <span class="chip chip--todo">待辦</span>
               <span class="t-name">信任清單治理</span>
-              <span class="t-note">格式與承諾值機制完成，上鏈仍是後面一步（而且屆時什麼都不用改——只是多一個 <code>expectedCommitment</code> 的來源）。<strong>刻意不是一份用抓的清單</strong>：那正是攻擊者可以在它存在的那場緊急狀況中掉包的東西，而且離線不能用。改成一份帶承諾值的文件，摘要取在<em>正規形式</em>而非收到的檔案（JSON 鍵序隨編碼器而異，兩個由不同途徑拿到同一份清單的查驗方必須算出同一個值）。<strong>刻意不簽章</strong>：簽章會引出「誰簽的」，而在憲政緊急狀態下發證機關本身可能正是失聯或不可信的那一方——那個答案事前沒人能取得共識。已釘住：發佈順序不影響摘要、改顯示名稱會改摘要、把鏡像升成主要簽發者會改摘要。</span>
-            </li>
+              <span class="t-note">格式與正規形式已寫完、測試釘住，<strong>但在 app target 裡零呼叫</strong>：<code>TrustList</code> 唯一的非測試引用就是它自己的定義，沒有內建承諾值、沒有隨 bundle 出貨的清單檔、<code>expectedCommitment</code> 是一個沒有人傳值的參數。同一個 codebase 的 <code>OfflineVerifier</code> 原話是「這台裝置上沒有信任清單可以評估第三方簽發者」，並對任何第三方簽發者一律拒絕——<strong>所以白皮書 5.2 的緊急換發證者，出貨的 App 做不到</strong>。「屆時什麼都不用改」也不成立：沒有 supersedes、沒有指名的下一個簽章者、沒有回滾規則、沒有單調性。2026-08-13 還在這個格式裡找到並修掉一個<strong>可複現的承諾值碰撞</strong>（一則 note 塞換行就能偽造整行），並定下一條紅線：<strong>在接續機制做完之前，任何承諾值都不可以公開。</strong></span></li>
           </ul>
         </div>
       </article>
