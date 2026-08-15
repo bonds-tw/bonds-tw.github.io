@@ -612,7 +612,7 @@
       </p>
     </div>
     <div class="blocker blocker--resolved">
-      <h3>已解鎖：Xcode 27 可用（本機建置約 2 分鐘）</h3>
+      <h3>已解鎖：Xcode 27 可用（冷建置實測 30.83 秒）</h3>
       <p>
         原本 App Store 的下載是死的——這台跑 macOS 27 beta，而 App Store 供應正式版 Xcode。
         改從 developer.apple.com 直接下載後解決。<code>xcode-select</code> 需要 sudo，
@@ -734,7 +734,7 @@
             <li>
               <span class="chip chip--partial">半完成</span>
               <span class="t-name">Bundle ID 與簽章團隊轉組織</span>
-              <span class="t-note">Bundle ID 已改為 <code>tw.bonds.*</code>。組織 Apple Developer 帳號仍未申請（要 D-U-N-S，與專屬 SP 一起送）。簽章團隊刻意留給各開發者本機設定。</span>
+              <span class="t-note">Bundle ID 已改為 <code>tw.bonds.*</code>。組織 Apple Developer 帳號仍未申請（要 D-U-N-S，與專屬 SP 一起送）。簽章團隊寫死在版控裡（<code>project.pbxproj</code> 八處 <code>DEVELOPMENT_TEAM = 538MCM44UX</code>，而 <code>.gitignore</code> 明確把 pbxproj 強制納入）——不是「留給各開發者設定」。</span>
             </li>
             <li>
               <span class="chip chip--done">已完成</span>
@@ -765,8 +765,8 @@
           </div>
           <p class="ms__goal">把「下載完就丟掉」的身分欄位，變成<em>存得住、簽得了、拿得出來</em>的可驗證憑證。</p>
           <div class="meter">
-            <div class="meter__bar"><div class="meter__fill" style="width:100%"></div></div>
-            <span class="meter__pct">100%</span>
+            <div class="meter__bar"><div class="meter__fill" style="width:75%"></div></div>
+            <span class="meter__pct">75%</span>
           </div>
           <ul class="tasks">
             <li>
@@ -830,7 +830,7 @@
             <li>
               <span class="chip chip--done">已完成</span>
               <span class="t-name">整合 <code>openac-rsa-x509-swift</code></span>
-              <span class="t-note">SPM 相依已接上，六個 API 實測連結成功。二進位框架含模擬器切片，所以不受實機問題影響。授權條款原本缺席、依 PSE 書面回覆動工；2026-08-07 上游補上 Apache/MIT 雙授權，本專案的 pin 已 bump 到該 commit。</span>
+              <span class="t-note">SPM 相依已接上，九個 API 實測連結成功。二進位框架含模擬器切片，所以不受實機問題影響。授權條款原本缺席、依 PSE 書面回覆動工；2026-08-07 上游補上 Apache/MIT 雙授權，本專案的 pin 已 bump 到該 commit。</span>
             </li>
             <li>
               <span class="chip chip--done">已完成</span>
