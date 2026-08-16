@@ -970,9 +970,73 @@ EOF</code></pre>
     </div>
   </section>
 
+
   <section class="section">
     <header>
-      <h2>6. Seven things worth reporting upstream</h2>
+      <h2>6. Age verification leaks the date of birth, and the card leaks itself</h2>
+      <p>Two complete driving-licence credentials, verified end to end. What separates
+      "over 18" from "under 18" is one disclosure — and there is no way to send it without sending the birthday.</p>
+    </header>
+    <div class="ms__body">
+      <ul class="tasks">
+        <li>
+          <span class="chip chip--done">MEASURED</span>
+          <span class="t-name">Both credentials verify, and they differ in exactly one field</span>
+          <span class="t-note">
+            Two complete SD-JWTs were recovered and checked: all six disclosures reproduce their
+            <code>_sd</code> digests (6/6, both credentials), and both ES256 signatures verify against
+            <code>key-1</code> fetched live from the issuer's JWKS.
+            <br>The two are structurally identical. <code>name</code>, <code>id_number</code>,
+            <code>type</code>, <code>controlnumber</code> and <code>gDate</code> carry the same values in
+            both; only <code>roc_birthday</code> differs — <code>1040605</code> (ROC 104 → 2015-06-05,
+            under 18) against <code>0570605</code> (ROC 057 → 1968-06-05, over 18). Different salts, so
+            different digests, but the same document otherwise.
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--done">MEASURED</span>
+          <span class="t-name">There is no age predicate — proving 18 means disclosing the birthday</span>
+          <span class="t-note">
+            No range proof, no <code>age_over_18</code> boolean, nothing derived. The only way to answer
+            「are you over 18」 with this credential is to disclose <code>roc_birthday</code>
+            <strong>in full, to the day</strong>.
+            <br>That is the ordinary convenience-store case, and it is the case selective disclosure is
+            usually sold on. The mechanism is present and correct — SD-JWT, salted, per-claim — and it
+            still cannot answer this question without handing over a date that identifies its holder far
+            more narrowly than the question required.
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--done">MEASURED</span>
+          <span class="t-name">How many fields you withheld is visible, and which ones are guessable</span>
+          <span class="t-note">
+            <code>_sd</code> carries exactly six digests, and the credential configuration that defines
+            those six fields is published in the issuer metadata for anybody to read. So a verifier who
+            receives four disclosures knows two were withheld, and knows the six-item menu they were
+            drawn from.
+            <br>Withholding is still worth doing — the values stay hidden — but it is not invisible, and
+            a wallet that presents it as "they will not know" is overstating it.
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--done">MEASURED</span>
+          <span class="t-name">Every card carries a unique index, in the clear, on every presentation</span>
+          <span class="t-note">
+            <code>credentialStatus.statusListIndex</code> is per-credential: <code>#20</code> on one of
+            these, <code>#19</code> on the other. It is not selectively disclosable — it sits in the
+            signed payload, outside <code>_sd</code>, so it goes to every verifier every time.
+            <br><strong>Two verifiers comparing notes can tell they saw the same card, without any
+            other field.</strong> That is inherent to StatusList2021 rather than a TWDIW mistake: the
+            index is what makes revocation checkable. It is worth stating plainly because a wallet's
+            selective-disclosure UI can easily imply the opposite.
+          </span>
+        </li>
+      </ul>
+    </div>
+  </section>
+  <section class="section">
+    <header>
+      <h2>7. Seven things worth reporting upstream</h2>
       <p>Ordered by how much a user is harmed, not by technical severity. Numbers 6 and 7 are held back
       pending better evidence, and are listed here so the reason is visible rather than silent.</p>
     </header>
@@ -1074,7 +1138,7 @@ EOF</code></pre>
 
   <section class="section">
     <header>
-      <h2>7. What we have not verified</h2>
+      <h2>8. What we have not verified</h2>
       <p>Listed because a page of findings without this section is asking to be over-read.</p>
     </header>
     <ul class="tasks">

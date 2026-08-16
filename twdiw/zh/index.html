@@ -945,9 +945,69 @@ EOF</code></pre>
     </div>
   </section>
 
+
   <section class="section">
     <header>
-      <h2>六、七件值得回報上游的事</h2>
+      <h2>六、證明年齡會交出生日，而卡片本身會出賣自己</h2>
+      <p>兩張完整的駕照電子卡，端到端驗過。分隔「已滿 18」與「未滿 18」的只有一個揭露
+      ——而沒有任何辦法在不交出生日的情況下送出它。</p>
+    </header>
+    <div class="ms__body">
+      <ul class="tasks">
+        <li>
+          <span class="chip chip--done">實測</span>
+          <span class="t-name">兩張都驗得過，而且只差一個欄位</span>
+          <span class="t-note">
+            取得兩張完整的 SD-JWT 並逐項檢查：六個揭露全部重算得出它們的 <code>_sd</code> 摘要
+            （兩張各 6/6），兩張的 ES256 簽章都用線上抓下來的 <code>key-1</code> 驗得過。
+            <br>兩張結構完全相同。<code>name</code>、<code>id_number</code>、<code>type</code>、
+            <code>controlnumber</code>、<code>gDate</code> 五項的值在兩張裡一樣；
+            只有 <code>roc_birthday</code> 不同——<code>1040605</code>（民國 104 → 2015-06-05，未成年）
+            對 <code>0570605</code>（民國 057 → 1968-06-05，成年）。鹽不同所以摘要不同，
+            其餘就是同一份文件。
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--done">實測</span>
+          <span class="t-name">沒有年齡述詞——要證明滿 18 就得交出生日</span>
+          <span class="t-note">
+            沒有 range proof、沒有 <code>age_over_18</code> 這種布林欄位、沒有任何衍生值。
+            用這張憑證回答「你滿 18 了嗎」的唯一辦法，是把 <code>roc_birthday</code>
+            <strong>完整揭露，精確到日</strong>。
+            <br>那正是超商那個最普通的情境，也正是選擇性揭露最常被拿來當賣點的情境。
+            機制本身是在的而且是對的——SD-JWT、加鹽、逐欄位——而它仍然沒辦法在不交出
+            一個把持有人縮得比問題所需窄得多的日期的前提下，回答這個問題。
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--done">實測</span>
+          <span class="t-name">你扣住了幾個欄位是看得見的，是哪幾個則猜得到</span>
+          <span class="t-note">
+            <code>_sd</code> 剛好六個摘要，而定義那六個欄位的 credential configuration
+            公開在 issuer metadata 裡誰都讀得到。所以一個收到四個揭露的查驗方，
+            知道有兩個被扣住，也知道它們是從哪一份六項的清單裡挑的。
+            <br>扣住仍然值得做——值本身是藏住的——但它不是隱形的，
+            而一個把它講成「他們不會知道」的皮夾是說過頭了。
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--done">實測</span>
+          <span class="t-name">每張卡都帶著一個唯一索引，明文，每次出示都送</span>
+          <span class="t-note">
+            <code>credentialStatus.statusListIndex</code> 是逐張憑證的：這兩張一張是
+            <code>#20</code>、一張是 <code>#19</code>。它<strong>不可選擇性揭露</strong>
+            ——它在簽過的 payload 裡、在 <code>_sd</code> 之外，所以每一次、對每一個查驗方都會送出去。
+            <br><strong>兩個查驗方對一下就知道他們看過同一張卡，不需要任何其他欄位。</strong>
+            這是 StatusList2021 的本質而不是 TWDIW 的失誤——索引正是撤銷之所以查得到的原因。
+            會寫出來是因為一個皮夾的選擇性揭露介面，很容易讓人以為情況相反。
+          </span>
+        </li>
+      </ul>
+    </div>
+  </section>
+  <section class="section">
+    <header>
+      <h2>七、七件值得回報上游的事</h2>
       <p>依使用者受害程度排，不是依技術嚴重度。第 6、7 件因為證據不足而暫緩，
       列在這裡是為了讓暫緩的理由看得見，而不是默默不提。</p>
     </header>
@@ -1043,7 +1103,7 @@ EOF</code></pre>
 
   <section class="section">
     <header>
-      <h2>七、我們沒有驗證過什麼</h2>
+      <h2>八、我們沒有驗證過什麼</h2>
       <p>列出來是因為一頁只有發現而沒有這一節，等於在邀請別人過度解讀。</p>
     </header>
     <ul class="tasks">
