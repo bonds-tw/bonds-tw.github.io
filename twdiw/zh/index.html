@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>數位憑證皮夾實作筆記 — 文件沒寫、撞到才知道的那些</title>
+<meta name="description" content="做第三方數位憑證皮夾時撞到的牆：文件與實際部署的差別、規範偏差、量到的數字，以及七件要回報上游的缺陷。每一條都標了證據等級。">
+<meta property="og:title" content="數位憑證皮夾實作筆記">
+<meta property="og:description" content="做第三方數位憑證皮夾時撞到的牆——文件沒寫、而且不知道就一定會做錯的那些。">
+<meta property="og:type" content="article">
+<link rel="alternate" hreflang="en" href="https://bonds-tw.github.io/twdiw/">
+<link rel="alternate" hreflang="zh-Hant" href="https://bonds-tw.github.io/twdiw/zh/">
+<link rel="alternate" hreflang="x-default" href="https://bonds-tw.github.io/twdiw/">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪪</text></svg>">
+</head>
+<body>
+<style>
+  :root {
+    --ground: #F1F3EF;
+    --surface: #FAFBF8;
+    --surface-2: #E9EDE6;
+    --line: #D6DCD2;
+    --line-soft: #E4E9E0;
+    --ink: #161C18;
+    --ink-soft: #4C564F;
+    --ink-faint: #77817A;
+    --accent: #9C6114;
+    --accent-bg: #F3E7D4;
+    --ok: #2C6B4E;
+    --ok-bg: #DDEBE2;
+    --warn: #9C6114;
+    --warn-bg: #F3E7D4;
+    --blocked: #A03A30;
+    --blocked-bg: #F5DFDC;
+    --idle: #6B756E;
+    --idle-bg: #E4E9E0;
+
+    --display: "Songti TC", "Noto Serif TC", "Source Han Serif TC", "Source Han Serif TW", Georgia, serif;
+    --body: "PingFang TC", "Noto Sans TC", "Heiti TC", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, "Roboto Mono", monospace;
+
+    --step--1: 0.78rem;
+    --step-0: 0.95rem;
+    --step-1: 1.13rem;
+    --step-2: 1.42rem;
+    --step-3: 1.9rem;
+    --step-4: 2.7rem;
+
+    --rail: 3.5rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #0F1513;
+      --surface: #161E1B;
+      --surface-2: #1D2724;
+      --line: #27322E;
+      --line-soft: #202A27;
+      --ink: #E7ECE7;
+      --ink-soft: #9CA89F;
+      --ink-faint: #78837B;
+      --accent: #D9922F;
+      --accent-bg: #2A2013;
+      --ok: #56B98A;
+      --ok-bg: #14241C;
+      --warn: #D9922F;
+      --warn-bg: #2A2013;
+      --blocked: #E0685A;
+      --blocked-bg: #2B1815;
+      --idle: #7C8880;
+      --idle-bg: #1D2724;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0F1513;
+    --surface: #161E1B;
+    --surface-2: #1D2724;
+    --line: #27322E;
+    --line-soft: #202A27;
+    --ink: #E7ECE7;
+    --ink-soft: #9CA89F;
+    --ink-faint: #78837B;
+    --accent: #D9922F;
+    --accent-bg: #2A2013;
+    --ok: #56B98A;
+    --ok-bg: #14241C;
+    --warn: #D9922F;
+    --warn-bg: #2A2013;
+    --blocked: #E0685A;
+    --blocked-bg: #2B1815;
+    --idle: #7C8880;
+    --idle-bg: #1D2724;
+  }
+
+  :root[data-theme="light"] {
+    --ground: #F1F3EF;
+    --surface: #FAFBF8;
+    --surface-2: #E9EDE6;
+    --line: #D6DCD2;
+    --line-soft: #E4E9E0;
+    --ink: #161C18;
+    --ink-soft: #4C564F;
+    --ink-faint: #77817A;
+    --accent: #9C6114;
+    --accent-bg: #F3E7D4;
+    --ok: #2C6B4E;
+    --ok-bg: #DDEBE2;
+    --warn: #9C6114;
+    --warn-bg: #F3E7D4;
+    --blocked: #A03A30;
+    --blocked-bg: #F5DFDC;
+    --idle: #6B756E;
+    --idle-bg: #E4E9E0;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: var(--step-0);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 68rem;
+    margin: 0 auto;
+    padding: clamp(1.5rem, 4vw, 3.5rem) clamp(1rem, 4vw, 2.5rem) 5rem;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2.5rem, 5vw, 4rem);
+  }
+
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead { display: flex; flex-direction: column; gap: 1.25rem; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: var(--step--1);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1rem;
+    align-items: center;
+  }
+
+  .masthead h1 {
+    font-family: var(--display);
+    font-size: var(--step-4);
+    line-height: 1.15;
+    font-weight: 600;
+    margin: 0;
+    text-wrap: balance;
+    letter-spacing: 0.01em;
+  }
+
+  .standfirst {
+    margin: 0;
+    max-width: 44rem;
+    color: var(--ink-soft);
+    font-size: var(--step-1);
+    line-height: 1.75;
+  }
+
+  .draft-flag {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    align-self: flex-start;
+    padding: 0.3rem 0.7rem;
+    background: var(--warn-bg);
+    color: var(--warn);
+    border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent);
+    border-radius: 2px;
+    font-family: var(--mono);
+    font-size: var(--step--1);
+    letter-spacing: 0.04em;
+  }
+
+  /* ---------- stat band ---------- */
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .stat {
+    background: var(--surface);
+    padding: 1.1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .stat dt {
+    font-family: var(--mono);
+    font-size: var(--step--1);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0;
+  }
+
+  .stat dd {
+    margin: 0;
+    font-family: var(--display);
+    font-size: var(--step-3);
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat dd small {
+    font-family: var(--body);
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+    letter-spacing: 0;
+  }
+
+  .stat--blocked dd { color: var(--blocked); }
+  .stat--ok dd { color: var(--ok); }
+
+  /* ---------- generic section ---------- */
+
+  .section { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .section > header { display: flex; flex-direction: column; gap: 0.5rem; }
+
+  .section h2 {
+    font-family: var(--display);
+    font-size: var(--step-2);
+    font-weight: 600;
+    margin: 0;
+    padding-bottom: 0.6rem;
+    border-bottom: 2px solid var(--ink);
+    letter-spacing: 0.02em;
+  }
+
+  .section > header p {
+    margin: 0;
+    color: var(--ink-soft);
+    max-width: 46rem;
+  }
+
+  /* ---------- blocker callout ---------- */
+
+  .blocker {
+    border: 1px solid color-mix(in srgb, var(--blocked) 35%, transparent);
+    border-left: 4px solid var(--blocked);
+    background: var(--blocked-bg);
+    border-radius: 3px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .blocker h3 {
+    margin: 0;
+    font-family: var(--body);
+    font-size: var(--step-1);
+    font-weight: 600;
+    color: var(--blocked);
+  }
+
+  .blocker p { margin: 0; color: var(--ink-soft); }
+  .blocker p strong { color: var(--ink); }
+
+  .blocker.blocker--resolved {
+    border-color: color-mix(in srgb, var(--ok) 35%, transparent);
+    border-left-color: var(--ok);
+    background: var(--ok-bg);
+  }
+  .blocker.blocker--resolved h3 { color: var(--ok); }
+
+  /* ---------- milestone track ---------- */
+
+  .track { display: flex; flex-direction: column; gap: 1rem; }
+
+  .ms {
+    display: grid;
+    grid-template-columns: var(--rail) 1fr;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .ms__rail {
+    background: var(--surface-2);
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.1rem 0;
+    gap: 0.5rem;
+  }
+
+  .ms__id {
+    font-family: var(--mono);
+    font-size: var(--step-0);
+    font-weight: 600;
+    color: var(--ink-soft);
+    letter-spacing: 0.02em;
+  }
+
+  .ms__dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--idle);
+    flex: none;
+  }
+  .ms--active .ms__dot { background: var(--warn); }
+  .ms--blocked .ms__dot { background: var(--blocked); }
+  .ms--done .ms__dot { background: var(--ok); }
+
+  .ms__body {
+    padding: 1.1rem 1.35rem 1.35rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    min-width: 0;
+  }
+
+  .ms__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 0.9rem;
+  }
+
+  .ms__title {
+    margin: 0;
+    font-family: var(--display);
+    font-size: var(--step-1);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .ms__meta {
+    font-family: var(--mono);
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+    letter-spacing: 0.04em;
+  }
+
+  .ms__goal { margin: 0; color: var(--ink-soft); max-width: 48rem; }
+
+  .ms__goal em {
+    font-style: normal;
+    color: var(--ink);
+    border-bottom: 1px solid var(--accent);
+  }
+
+  /* progress meter */
+
+  .meter {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .meter__bar {
+    flex: 1;
+    height: 5px;
+    background: var(--surface-2);
+    border-radius: 3px;
+    overflow: hidden;
+    min-width: 4rem;
+  }
+
+  .meter__fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+  }
+  .ms--done .meter__fill { background: var(--ok); }
+  .ms--blocked .meter__fill { background: var(--blocked); }
+
+  .meter__pct {
+    font-family: var(--mono);
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+    min-width: 2.8rem;
+    text-align: right;
+  }
+
+  /* task list */
+
+  .tasks {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--line-soft);
+  }
+
+  .tasks li {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr;
+    gap: 0.35rem 0.9rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--line-soft);
+    align-items: baseline;
+  }
+
+  .tasks li:last-child { border-bottom: 0; padding-bottom: 0; }
+
+  .tasks .t-name { color: var(--ink); min-width: 0; }
+
+  .tasks .t-note {
+    grid-column: 2;
+    color: var(--ink-faint);
+    font-size: var(--step--1);
+    line-height: 1.6;
+  }
+
+  .chip {
+    justify-self: start;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.45rem;
+    border-radius: 2px;
+    white-space: nowrap;
+    border: 1px solid transparent;
+  }
+
+  .chip--done    { color: var(--ok);      background: var(--ok-bg);      border-color: color-mix(in srgb, var(--ok) 28%, transparent); }
+  .chip--partial { color: var(--warn);    background: var(--warn-bg);    border-color: color-mix(in srgb, var(--warn) 28%, transparent); }
+  .chip--blocked { color: var(--blocked); background: var(--blocked-bg); border-color: color-mix(in srgb, var(--blocked) 28%, transparent); }
+  .chip--todo    { color: var(--idle);    background: var(--idle-bg);    border-color: color-mix(in srgb, var(--idle) 25%, transparent); }
+  .chip--spike   { color: var(--ink-soft);background: var(--surface-2);  border-color: var(--line); }
+
+  /* ---------- tables ---------- */
+
+  .table-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: var(--surface);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--step-0);
+    min-width: 40rem;
+  }
+
+  thead th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: var(--step--1);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface-2);
+    white-space: nowrap;
+  }
+
+  tbody td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--line-soft);
+    vertical-align: top;
+    color: var(--ink-soft);
+  }
+
+  tbody tr:last-child td { border-bottom: 0; }
+
+  tbody td:first-child { color: var(--ink); }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.86em;
+    background: var(--surface-2);
+    padding: 0.1rem 0.35rem;
+    border-radius: 2px;
+    color: var(--ink);
+    word-break: break-word;
+  }
+
+  .verdict { color: var(--ink); font-weight: 600; }
+
+  /* ---------- decisions ---------- */
+
+  .decisions { display: flex; flex-direction: column; gap: 1rem; }
+
+  .decision {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 3px;
+    padding: 1.1rem 1.35rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .decision h3 {
+    margin: 0;
+    font-size: var(--step-0);
+    font-family: var(--body);
+    font-weight: 600;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: baseline;
+  }
+
+  .decision h3 .d-id {
+    font-family: var(--mono);
+    font-size: var(--step--1);
+    color: var(--accent);
+    letter-spacing: 0.06em;
+  }
+
+  .decision p { margin: 0; color: var(--ink-soft); }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding-top: 1.5rem;
+    color: var(--ink-faint);
+    font-size: var(--step--1);
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  @media (max-width: 34rem) {
+    :root { --rail: 2.6rem; }
+    .tasks li { grid-template-columns: 1fr; }
+    .tasks .t-note { grid-column: 1; }
+    .ms__body { padding: 1rem 1rem 1.15rem; }
+  }
+
+/* ---------- this page only: language switch ---------- */
+.langswitch { display: inline-flex; gap: .5em; align-items: baseline; }
+.langswitch b { font-weight: 700; }
+.langswitch a { text-decoration: none; border-bottom: 1px solid currentColor; }
+
+/* ---------- this page only: code blocks ---------- */
+/* The roadmap page has no code blocks, so these are not in the shared sheet.
+   Without them a 190-character did:key pushes the whole document sideways —
+   measured 1509px against a 986px viewport before this block existed. */
+pre {
+  max-width: 100%;
+  overflow-x: auto;
+  background: var(--panel, #fff);
+  border: 1px solid var(--line, #d8d8d0);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 18px 0;
+  font-size: .82rem;
+  line-height: 1.7;
+}
+pre code { display: block; white-space: pre; }
+/* Identifiers wrap instead of scrolling: a DID is one unbroken token, and
+   horizontal scrolling inside a code block is unusable on a phone. */
+pre.tokens code { white-space: pre-wrap; word-break: break-all; }
+</style>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">
+      <span>Bonds.tw</span>
+      <span>／</span>
+      <span>有備而來 · Bond for the Future</span>
+      <span>／</span>
+      <span>2026-08-16</span>
+      <span>／</span>
+      <span class="langswitch"><a href="/twdiw/" hreflang="en" lang="en">EN</a> · <b>中文</b></span>
+    </div>
+    <h1>數位憑證皮夾實作筆記</h1>
+    <p class="standfirst">
+      做一個第三方持有端的時候，量到與撞到的東西。它補的是
+      <a href="https://docs.denkeni.org/twdiw" hreflang="en">denkeni 那份《Missing Manual》</a>——
+      那份講的是有哪些環境、走哪些流程，這一頁講的是文件與實際部署的差別、
+      規範被折彎的地方，以及哪些錯誤會通過你所有的測試然後在現場壞掉。
+    </p>
+    <span class="draft-flag">
+      完整中文版，不是摘要——與 <a href="/twdiw/" lang="en">English</a> 一起維護、同一個 commit 更新。
+      所有量測日期 2026-08-16，對象為正式環境公開端點，全部唯讀。
+    </span>
+  </header>
+
+  <section class="section">
+    <header>
+      <h2>零、這一頁怎麼讀</h2>
+      <p>底下每一條主張都掛了證據等級。這件事在這裡比平常重要，因為其中幾條是對一個政府系統的缺陷回報，
+      而一條經不起「你們實測過嗎」的主張，會連累其他站得住的。</p>
+    </header>
+    <ul class="tasks">
+      <li>
+        <span class="chip chip--done">實測</span>
+        <span class="t-name">對公開的正式端點做唯讀請求</span>
+        <span class="t-note">指令附在旁邊，任何人可以重跑。日期一律標出來，因為這些端點會變。</span>
+      </li>
+      <li>
+        <span class="chip chip--partial">讀碼</span>
+        <span class="t-name">從 MIT 授權的原始碼讀出來的</span>
+        <span class="t-note"><code>moda-gov-tw/TWDIW-official-app</code>，2026-08-16 讀 <code>HEAD</code>（最後 push 2026-07-27）。⚠️ <strong>讀公開的原始碼不等於知道部署上去的 build 在做什麼。</strong> 凡是主張講的是線上行為、而證據只到原始碼的，我都會註明。</span>
+      </li>
+      <li>
+        <span class="chip chip--blocked">n=1</span>
+        <span class="t-name">單一樣本，或二手來源</span>
+        <span class="t-note">記下來是因為知道它有用，<strong>不是</strong>因為它撐得起結論。這些不要拿去回報上游，除非先補樣本。</span>
+      </li>
+    </ul>
+    <p style="margin-top:20px">
+      <strong>這一頁沒有的東西：我們從來沒有真的領過一張卡。</strong>
+      底下沒有一件事需要發出一張憑證才做得到，所以也不要把它讀成「整條流程我們跑過而且會通」。
+      唯一需要送出表單的那一步，正是我們沒有走的那一步。
+    </p>
+  </section>
+
+  <section class="section">
+    <header>
+      <h2>一、第三方皮夾這個角色不存在</h2>
+      <p>不是「很難」。是文件、沙盒、資料模型裡都沒有這個角色。</p>
+    </header>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th scope="col">角色</th><th scope="col">要做什麼才能上場</th></tr></thead>
+        <tbody>
+          <tr><td>發行端</td><td>申請沙盒帳號 → 自架 → 跟團隊做 UAT → 正式</td></tr>
+          <tr><td>驗證端</td><td>同上，換成驗證端那一套</td></tr>
+          <tr><td><strong>皮夾（持有端）</strong></td><td><strong>文件沒有寫。沒有申請表、沒有註冊、沒有 attestation。</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:18px">
+      沙盒帳號申請頁的對象是「產品、服務或程式之串接測試」，指向
+      <code>issuer-sandbox</code> 與 <code>verifier-sandbox</code>。沒有 <code>wallet-sandbox</code>。
+      而在《Missing Manual》裡，標題叫
+      <strong>「If You're Building a Third-Party Issuer or Verifier Software」的那一節是空的</strong>，
+      第三方<em>皮夾</em>連標題都沒有。
+    </p>
+
+    <div class="ms__body" style="margin-top:24px">
+      <ul class="tasks">
+        <li>
+          <span class="chip chip--partial">讀碼</span>
+          <span class="t-name"><code>client_id</code> 不是名單，是回音</span>
+          <span class="t-note">
+            發行端自己簽一個 ID Token，<code>aud</code> 是寫死的字串 <code>"moda_dw"</code>
+            （<code>twdiw-vc-handler/…/CredentialService.java</code>）。OID4VCI handler 接著
+            從<em>那個</em> <code>aud</code> 讀出 <code>client_id</code>
+            （<code>twdiw-oid4vci-handler/…/CredentialIssuer.java</code>），存進 pre-authorized code。
+            到了 <code>/token</code>，皮夾送的 <code>client_id</code> 拿去跟那筆比對；
+            proof JWT 的 <code>iss</code> 再跟同一個值比對一次。
+            <br><strong>整條鏈驗的是「你送的字串等於你送的字串」。</strong>
+            資料庫 49 張表裡沒有任何一張是 client、wallet、app 或 device 的註冊表。
+            沒有 <code>client_secret</code>、沒有 client assertion、沒有 mTLS、
+            沒有 Play Integrity、沒有 App Attest、沒有 DeviceCheck。
+            <br>同一次閱讀還撞到兩件事：ID Token 的簽章被取出來之後<strong>從此沒有被使用</strong>；
+            <code>AccessTokenFilter</code> 的驗證邏輯整段被註解掉，旁邊留著
+            「尚未啟用 AccessToken 驗證」，而 <code>/api/**</code> 是 <code>permitAll</code>。
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--spike">小心</span>
+          <span class="t-name">這件事的意思，以及不是什麼意思</span>
+          <span class="t-note">
+            這<strong>不</strong>表示任何人都能領到憑證。領卡真正的門檻是 pre-authorized code
+            ——也就是那張 QR——加上可選的 <code>tx_code</code>。站得住而且更有力的說法是：
+            <br><strong>拿得到那張 QR 的人，用任何自製皮夾都能走完全程；
+            官方 App 沒有任何密碼學上或註冊上的特權。</strong>
+            <br>還有一個讀原始碼消不掉的限制：我們沒有對正式的領卡端點送過任何一個請求，
+            所以無法排除網路層（WAF、API gateway、mTLS、IP 限制）另有管制，
+            而那些東西不會出現在 repo 裡。
+          </span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <header>
+      <h2>二、did:key 的拼法不是你實作的那一種</h2>
+      <p>皮夾最先死在這裡，而且是以一個離真正原因兩層遠的解析錯誤死掉的。</p>
+    </header>
+    <p>
+      數位憑證皮夾用的是 multicodec <strong><code>0xEB51</code>（<code>jwk_jcs-pub</code>）</strong>，
+      payload 是整份 JWK 的 JSON 文字。不是 <code>p256-pub</code>（<code>0x1200</code>）
+      ——後者帶的是 33 bytes 的壓縮點，而那是多數 did:key 實作對 P-256 產生的東西。
+      拿一筆真實的信任清單條目逐位元組解開：
+    </p>
+    <pre><code>129 bytes
+前 3 bytes = D1 D6 03          # 0xEB51 的 LEB128 varint
+其餘 126   = {"crv":"P-256","kty":"EC","x":"kY6ina…","y":"c5je-…"}</code></pre>
+    <p>
+      伺服器端把那三個位元組<strong>寫死</strong>切掉，multibase 字元不檢查、multicodec 也不檢查：
+    </p>
+    <pre><code>String did_hex_prefix = CryptoHelper.convertBinaryToHexString(Base58.decode(did.substring(1)));
+String did_hex = did_hex_prefix.substring(6);   // 去掉prefix D1D603
+String did_jwk = new String(CryptoHelper.hexStringToByteArray(did_hex));</code></pre>
+    <p>
+      所以你送一個 <code>did:key:zDn…</code> 過去，它會少掉三個位元組、然後被當成 JSON 解析。
+      你拿到的是一個 JSON 錯誤，而真正的原因——multicodec 不對——沒有任何地方會提到。
+    </p>
+
+    <div class="ms__body" style="margin-top:24px">
+      <ul class="tasks">
+        <li>
+          <span class="chip chip--done">實測</span>
+          <span class="t-name">正式環境每一個發行者 DID 都是 JCS 正規的</span>
+          <span class="t-note">
+            正式信任清單 43 筆全部：multicodec <code>0xEB51</code> ×43、JWK 鍵序
+            <code>crv,kty,x,y</code> ×43、自簽章驗得過 ×43、內嵌 DID 文件的 <code>id</code> 相符 ×43、
+            header 的 <code>jwk</code> 與 DID 內嵌金鑰相符 ×43。
+            <strong>發行者那一側是乾淨的。</strong>
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--blocked">n=1</span>
+          <span class="t-name">而官方皮夾自己的 holder DID 不合規</span>
+          <span class="t-note">
+            <code>jwk_jcs-pub</code> 的定義就是 JWK 經過 RFC 8785 的 JCS，鍵序必須
+            <code>crv</code> &lt; <code>kty</code> &lt; <code>x</code> &lt; <code>y</code>。
+            我們手上那一個 holder DID 是 <code>crv, x, y, kty</code>——<code>kty</code> 掉到最後。
+            <br>⚠️ <strong>一個樣本，來自文件而不是我們自己跑出來的皮夾，而且沒有記錄 App 版本。</strong>
+            這足以決定解析器要怎麼寫，但不足以當缺陷回報。要回報得先從一個標明版本的 build
+            蒐集幾個 DID。
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--spike">規則</span>
+          <span class="t-name">產生要嚴格，接受要寬鬆——而且永遠不要比較原始的 DID 字串</span>
+          <span class="t-note">
+            自己產生的一律正規化。<strong>不要</strong>要求接受的東西正規：
+            嚴格的解析器會拒絕真實世界唯一存在的那個台灣皮夾，而金鑰的位元組兩邊都不含糊。
+            <br>寬鬆會打開一個真的問題，因為下游一律拿 DID 當<em>字串</em>比對——JWS 的
+            <code>kid</code> 對 <code>issuer</code>、出示者的 DID 對 <code>credentialSubject.id</code>。
+            關掉它的方式是：比較<strong>正規形式</strong>，也就是從金鑰算出來的那一份，
+            而不是比較收到的字串。兩個 DID 指同一把金鑰，恰好等價於它們的正規形式相同，
+            沒有任何拼法躲得掉。
+          </span>
+        </li>
+      </ul>
+    </div>
+
+    <p style="margin-top:20px"><strong>測試向量。</strong>兩個都是真的，來自正式環境：</p>
+    <pre class="tokens"><code># 行政院-數位發展部（正規——必須逐字元 round-trip 回它自己）
+did:key:z2dmzD81cgPx8Vki7JbuuMmFYrWPgYoytykUZ3eyqht1j9Kbrzifm9txeerMVc9oLUg2nBJJnUtgYcAYd35rw1rCLq8y3bLDDBUPH5yTYB7ocY7oPESPBXqubuwMcRzw9evbeHHyFkwsmDc43myibDChGhDk8zrgZDB4KNyXPiQvkktUwn
+
+# 一個皮夾的 holder DID（非正規——但必須解得開）
+did:key:z2dmzD81cgPx8Vki7JbuuMmFYrWPodrZSqMbCy9Ndu4UgUGy3RNkhH479eLPpbfAhVSNu7B4oJvUwLzyxiP4Jt5k9cqqmChanxAazTGxJMvGxYDApNkXeDW5MPZgZRkjRgD1yaig5KCEgAaVbg8zrvYjMTi1BzqdDpPpkeSFmJwiej9YNY</code></pre>
+  </section>
+
+  <section class="section">
+    <header>
+      <h2>三、憑證是 SD-JWT，而沒有任何欄位會告訴你</h2>
+      <p>這是最貴的一個坑，因為寫錯的那個版本會通過你想得到的每一個測試。</p>
+    </header>
+    <div class="ms__body">
+      <ul class="tasks">
+        <li>
+          <span class="chip chip--done">實測</span>
+          <span class="t-name">metadata 說 <code>jwt_vc_json</code>，而且是全部</span>
+          <span class="t-note">
+            <code>GET https://issuer-oid4vci.wallet.gov.tw/api/issuer/00000000/.well-known/openid-credential-issuer</code>
+            → 701,000 bytes、882 組 credential configuration。
+            <br><strong><code>format</code> 分布：<code>{jwt_vc_json: 882}</code>。整份文件裡
+            <code>sd-jwt</code> 出現 0 次、<code>_sd</code> 0 次、
+            <code>selective</code> 與 <code>disclosure</code> 各 0 次。</strong>
+            <br>實際回來的是 <code>typ: vc+sd-jwt</code> 加一串 <code>~</code> 分隔的揭露。
+            <strong>一個照規範讀 metadata 的 OID4VCI 客戶端，沒有任何欄位可以讓它發現這件事。
+            <code>~</code> 是唯一的訊號。</strong>
+            <br>（順帶一個營運面的數字：為了拿一組設定要下載 701 KB。抓一次就好。）
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--done">實測</span>
+          <span class="t-name">摘要算在 base64url 字串本身，不是解碼後的 JSON</span>
+          <span class="t-note">
+            兩個讀法都說得通，只有一個是對的。選錯的後果是你的皮夾對每一份誠實的揭露都找不到匹配，
+            然後把每一張真卡回報成偽造。
+            <br>沒有照規範推，直接拿正式資料驗：2025-10-07 一張真實駕照電子卡的六段揭露，
+            以及同一張憑證公開的兩個 <code>_sd</code> 值。
+            <br><strong><code>base64url(SHA-256(揭露自己的 base64url 字串，ASCII))</code>
+            兩個都對得上。對解碼後的位元組做雜湊則一個都對不上。</strong>
+            <br>自己跑一次：
+          </span>
+        </li>
+      </ul>
+    </div>
+    <pre><code>python3 - &lt;&lt;'EOF'
+import hashlib, base64
+b64u_e = lambda b: base64.urlsafe_b64encode(b).decode().rstrip('=')
+D = "WyJwbHowWFN6LW9CSEUwZTUzTFVBeWNBIiwiaWRfbnVtYmVyIiwiQTIzNDU2Nzg5MCJd"
+print(b64u_e(hashlib.sha256(D.encode('ascii')).digest()))
+# ApkeYAR85EzxAHS1ojnNHhG7wnCDyTt4_iCIX2VKxaw  ← 憑證裡公開的那個 _sd 值
+EOF</code></pre>
+
+    <div class="ms__body" style="margin-top:24px">
+      <ul class="tasks">
+        <li>
+          <span class="chip chip--partial">讀碼</span>
+          <span class="t-name">它是混血：SD-JWT 裝在 VCDM 1.1 的 <code>vc</code> 裡</span>
+          <span class="t-note">
+            <code>_sd</code> 與 <code>_sd_alg</code> 在 <code>vc.credentialSubject</code> 底下，不在頂層。
+            型別是 <code>vc.type[1]</code>，不是 <code>vct</code>。所以照 SD-JWT VC 寫的讀取器
+            會在錯的地方找，照 VCDM 寫的則根本不會把揭露切出來。兩種都不拋錯，兩種都是錯的。
+            <br>發行端與後端驗證端用的都是 <code>com.authlete:sd-jwt</code>，所以摘要語意是對的
+            ——只是那份 metadata 從頭到尾不承認這個格式存在。
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--done">實測</span>
+          <span class="t-name"><code>statusListIndex</code> 是字串</span>
+          <span class="t-note">
+            <code>"statusListIndex": "35"</code>，不是 <code>35</code>。只接受數字的讀取器會把整個
+            <code>credentialStatus</code> 物件丟掉——而一張沒有 status 的憑證，
+            就是一張永遠不會被查撤銷的憑證。靜默，而且往看起來安全的方向失敗。
+          </span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <header>
+      <h2>四、信任清單</h2>
+      <p>比想像中小，錨定得比想像中好，而它的分類標籤絕對不能顯示給使用者。</p>
+    </header>
+    <div class="ms__body">
+      <ul class="tasks">
+        <li>
+          <span class="chip chip--done">實測</span>
+          <span class="t-name">正式環境 43 筆，而 <code>size</code> 不被遵守</span>
+          <span class="t-note">
+            <code>GET https://frontend.wallet.gov.tw/api/did?size=20&amp;page=0&amp;orgType=1&amp;status=1</code>
+            <br><code>orgType=1</code> 20 筆、<code>orgType=2</code> 23 筆、3 與 4 是 0。
+            用兩種頁大小（20 與 5）各自逐頁抓到空頁，兩次總數相同，識別碼全部不重複。
+            <br>⚠️ <strong>頁大小被夾在 20，但 offset 看起來是照你送的 <code>size</code> 算的</strong>，
+            所以 <code>size=100&amp;page=1</code> 什麼都不會回。一頁一頁抓到空為止，
+            不要自己用 <code>size</code> 算 offset。
+            <br><strong>43 筆裝得進 App。</strong> 這件事改變了一個離線皮夾可以做什麼。
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--done">實測</span>
+          <span class="t-name">不要顯示 <code>orgGroupDetail.name</code></span>
+          <span class="t-note">
+            43 筆全部標成「政府部門」。這 43 筆裡面包括全家便利商店、統一超商、中華電信、
+            台灣大哥大、遠傳電信，以及一批民間公司。
+            <br><strong>任何照字面顯示這個欄位的介面，都會告訴使用者全家便利商店是政府部門。</strong>
+            真正區分角色的看起來是 <code>orgType</code> 1/2——公路局兩邊都有，超商只在 2，
+            而超商正是電信憑證那個「超商取貨」情境的驗證方。
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--done">實測</span>
+          <span class="t-name">鏈上存的是完整文件，不是雜湊</span>
+          <span class="t-note">
+            Arbitrum One，合約 <code>0x84172caf8dd126c76f1fa8a2733ca3233264d31f</code>。
+            數發部那一筆錨定交易的 calldata 有 2,596 bytes，內容是<strong>完整的 DID 字串與
+            完整的自簽 DID 文件 JWS 的明文</strong>。<code>sha256(DID)</code> 不在裡面。
+            <br>這比「刻在石碑上」那句宣傳更強：資料本身在鏈上，所以客戶端原則上可以
+            完全不信任 <code>frontend.wallet.gov.tw</code>。
+            <br>⚠️ <strong>但我們只驗了一筆交易，而且那筆的 tx hash 是那個 API 給的。</strong>
+            要證明這是一條真的可用的無信任路徑，得示範「只給合約位址就能列舉全部 43 筆」。沒有做。
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--blocked">n=1</span>
+          <span class="t-name">43 筆裡有 41 筆上鏈——那兩個例外值得知道</span>
+          <span class="t-note">
+            中國醫藥大學出現兩次（兩個 <code>orgType</code> 各一），
+            <code>onChainHistory</code> 是空的、<code>x509_type</code> 是 <code>XCA</code>，
+            而且雖然登記在發行端那個 <code>orgType</code> 底下，
+            <code>issuerMetadataBaseURL</code> 卻是 <code>null</code>。
+            <br>⚠️ 這是那個 API 自己的自述。我們沒有去鏈上找它們，
+            所以「沒上鏈」在這裡的意思是「API 說沒有」——考慮到錨定本來就是為了不必相信那個 API，
+            這是循環的。
+          </span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <header>
+      <h2>五、撤銷這條路沒有離線的信任錨點</h2>
+      <p>憑證那條路錨在公鏈上。撤銷這條路只有一個 URL。</p>
+    </header>
+    <div class="ms__body">
+      <ul class="tasks">
+        <li>
+          <span class="chip chip--done">實測</span>
+          <span class="t-name">簽撤銷清單的金鑰不在發行者的 DID 裡</span>
+          <span class="t-note">
+            抓一份撤銷清單，用兩種方式各驗一次：
+            <br>• 用它自己 <code>iss</code> 的 <code>did:key</code> 內嵌金鑰 → <strong>驗不過</strong>
+            <br>• 用 <code>jku</code> 那組的 <code>key-2</code> → <strong>驗得過</strong>
+            <br><code>GET https://issuer-vc.wallet.gov.tw/api/keys</code> 回兩把。
+            <code>key-1</code> 就是發行者 DID 內嵌的那把，簽憑證；
+            <code>key-2</code> 簽撤銷清單，而它<strong>不在任何 DID 文件裡、不在信任清單裡、
+            不在任何鏈上紀錄裡</strong>。那份 DID 文件只有一個 verification method。
+            <br>所以：<strong>查一張憑證有沒有被撤銷，信任基礎只有 TLS。</strong>
+            把清單快取起來也沒用——離線一樣驗不了它的簽章。
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--done">實測</span>
+          <span class="t-name">有效期是「上次被簽之後 24 小時」，不是「抓下來之後」</span>
+          <span class="t-note">
+            <code>nbf</code> 到 <code>exp</code> 剛好 86,400 秒。但 <code>nbf</code> 是
+            <em>這份清單上一次被簽的時間</em>，不是你抓下來的時間。
+            <br><strong>所以一份剛下載好的撤銷清單，剩餘效期介於 24 小時與趨近於零之間。</strong>
+            介面上要顯示清單自己帶的 <code>exp</code>，永遠不要跟使用者說「24 小時內有效」。
+            <br>清單本身很便宜：壓縮後 76 字元、解壓 16,384 bytes、容量 131,072 bits，
+            量測當下有 84 個位元是 1。常常抓是可行的，問題只在離線的那一段。
+            <br>⚠️ <strong>重簽節奏是 n=2</strong>（一個 2025 年的樣本是發卡時重簽，
+            一個 2026 年的落在每日邊界）。不要拿那個時刻去設計預抓排程；
+            關於剩餘效期的結論不受影響，因為它只需要 <code>exp</code> 是絕對時間。
+          </span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <header>
+      <h2>六、七件值得回報上游的事</h2>
+      <p>依使用者受害程度排，不是依技術嚴重度。第 6、7 件因為證據不足而暫緩，
+      列在這裡是為了讓暫緩的理由看得見，而不是默默不提。</p>
+    </header>
+    <div class="ms__body">
+      <ul class="tasks">
+        <li>
+          <span class="chip chip--partial">讀碼</span>
+          <span class="t-name">一、選擇性揭露可能送出使用者沒有勾選的欄位</span>
+          <span class="t-note">
+            皮夾 SDK 決定保留哪些揭露的方法，是<strong>拿要求的欄位名去對整段解碼後的 JSON 做
+            子字串比對</strong>——而那段 JSON 包含鹽與值：
+            <br><code>String decoded = utf8.decode(base64.decode(base64Url)); if (decoded.contains(field)) { … }</code>
+            <br>駕照同時有 <code>id_number</code> 與 <code>controlnumber</code>，兩個都含子字串
+            <code>number</code>。值裡若出現另一個欄位的名稱也會誤中；隨機的鹽理論上也可能命中。
+            另外那個 <code>continue</code> 在內層迴圈，所以一個揭露同時命中兩個欄位會被附加兩次。
+            <br><strong>使用者勾選「只揭露 A」，可能送出 A 與 B。</strong>
+            這是這個功能的核心承諾，也是這一頁唯一一條不需要解釋為什麼有害的缺陷。
+            <br>⚠️ 只有原始碼。沒有記錄 App 版本，也沒有在流量上觀察到。
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--partial">讀碼</span>
+          <span class="t-name">二、四個對外抓取關閉了 TLS 主機名驗證</span>
+          <span class="t-note">
+            發行者公鑰、撤銷清單、schema、以及 frontend 的 DID 查詢，四個都傳
+            <code>setAllowedHostnames(null)</code>。而在 <code>HttpUtils</code> 裡那不是
+            「不設清單、走系統預設」——自訂的 <code>HostnameVerifier</code>
+            <strong>無條件回傳 <code>true</code></strong>。那四條連線上，
+            TLS 憑證與主機名之間的繫結消失了。
+            <br>RFC 8725 §3.8 明文要求 <code>jku</code> 必須限制在受信任 URL 的允許清單。
+            <br>⚠️ 只有原始碼；而且這描述的是公開的驗證端程式，由各驗證機關自行部署，
+            我們無法確認任何一個實際部署跑的是什麼。
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--partial">讀碼</span>
+          <span class="t-name">三、撤銷清單與 schema 在發行者簽章驗證完成前就被抓取</span>
+          <span class="t-note">
+            <code>validateVC()</code> 把六個步驟當成同時起飛的 future：抓撤銷清單（第 3 步）
+            與抓 schema（第 5 步）都比驗發行者簽章（第 6 步）早，而那兩個 URL 取自
+            尚未驗簽的 payload。配上第二條，任何能對驗證端 POST 一份 VP 的人，
+            都能讓它對任意 URL 發出 GET。
+            <br>另外 <code>StatusListCheckTask</code> <strong>沒有</strong> DID 優先那一段，
+            直接走 <code>loadIssuerPublicKey(jku, kid)</code>。這是 <code>jku</code> 這個模式在
+            正式環境真正活著的那個實例，而它是自我指涉的：清單自己說用哪把鑰匙驗自己。
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--partial">讀碼</span>
+          <span class="t-name">四、<code>client_id</code> 不帶任何資訊，而且兩道檢查是關的</span>
+          <span class="t-note">見第一節。ID Token 的簽章從未被驗；<code>AccessTokenFilter</code> 的驗證被註解掉。</span>
+        </li>
+        <li>
+          <span class="chip chip--done">實測</span>
+          <span class="t-name">五、<code>format</code> 沒有描述憑證</span>
+          <span class="t-note">882 組全部。見第三節。</span>
+        </li>
+        <li>
+          <span class="chip chip--partial">讀碼</span>
+          <span class="t-name">六、VP 物件用 <code>context</code> 而不是 <code>@context</code></span>
+          <span class="t-note">
+            皮夾 SDK 裡三個產生 VP 的函式全部寫 <code>'context'</code>，少了 at 符號。
+            搜尋 VCDM 的 context URL 只找到那三處，也就是說
+            <strong>系統裡沒有任何一條路徑寫對</strong>。
+            <br>⚠️ <strong>我們一開始把它描述成「JSON-LD 處理會靜默丟掉主張」。那是錯的</strong>
+            ——TWDIW 的驗證端根本沒有做 JSON-LD 展開，所以今天沒有東西被丟掉。
+            準確的說法是：這是一個會咬到任何<em>有做</em>展開的第三方驗證端的互通性缺陷，
+            不是一個正在造成資料遺失的 bug。值得回報，但不值得用我們一開始那個寫法回報。
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--blocked">n=1</span>
+          <span class="t-name">七、holder DID 不符合 JCS——暫緩</span>
+          <span class="t-note">
+            見第二節。一個樣本、二手、沒有 App 版本。在拿到一個標明 build 的幾個 DID 之前不回報。
+            列出來是為了讓這個缺口看得見。
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--spike">設計</span>
+          <span class="t-name">還有一件不算缺陷的：發行者換不了金鑰</span>
+          <span class="t-note">
+            發行者的身分是一個 <code>did:key</code>——金鑰<em>就是</em>身分。
+            所以輪替簽章金鑰等於變成另一個發行者，而所有已經發出去的憑證的
+            <code>iss</code> 從此不在信任清單裡。皮夾將無法區分
+            「這個發行者被撤下了」與「它換了金鑰、舊卡其實還是真的」。
+            <br><strong>這是這一頁唯一一件會讓已經在使用者手上的卡集體變成無法評估的事。</strong>
+          </span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <header>
+      <h2>七、我們沒有驗證過什麼</h2>
+      <p>列出來是因為一頁只有發現而沒有這一節，等於在邀請別人過度解讀。</p>
+    </header>
+    <ul class="tasks">
+      <li><span class="chip chip--blocked">缺口</span><span class="t-name">我們從來沒有領過一張卡</span><span class="t-note">關於發卡的每一件事都是讀原始碼讀出來的。唯一需要送出表單的那一步，正是我們沒有走的那一步——而那一步同時會回答「送一個不是 <code>moda_dw</code> 的 <code>client_id</code> 會不會被拒」。</span></li>
+      <li><span class="chip chip--blocked">缺口</span><span class="t-name">原始碼不等於部署</span><span class="t-note">第一到第四與第六件都是從公開 repo 讀出來的。我們無法確認部署上去的 build 與它一致。</span></li>
+      <li><span class="chip chip--blocked">缺口</span><span class="t-name">一組設定、一個時間點</span><span class="t-note">撤銷清單的量測是單一設定在單一時刻。另外 881 組沒有取樣。</span></li>
+      <li><span class="chip chip--blocked">缺口</span><span class="t-name">「欄位值都是字串」</span><span class="t-note">駕照那六個欄位都是字串。電信或超商取貨那些卡會不會帶非字串的值，不知道，而這件事的失敗形態很差：嚴格要求三元素字串陣列的讀取器會拒收<em>整張卡</em>，於是一張真卡被判成壞卡。</span></li>
+    </ul>
+  </section>
+
+  <footer>
+    <div>這些是做「有備而來」——一個離線優先的台灣身分皮夾——的過程中量到的。工程藍圖：<a href="/roadmap/">bonds-tw.github.io/roadmap</a>。</div>
+    <div>補強 Denken Chen 的 <a href="https://docs.denkeni.org/twdiw" hreflang="en">TWDIW: The Missing Manual</a>。讀的原始碼：<a href="https://github.com/moda-gov-tw/TWDIW-official-app">moda-gov-tw/TWDIW-official-app</a>（MIT）。歡迎指正——包括指正這一頁，它已經自我更正過兩次。</div>
+  </footer>
+
+</div>
+</body>
+</html>

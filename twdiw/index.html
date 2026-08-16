@@ -8,6 +8,9 @@
 <meta property="og:title" content="TWDIW Field Notes">
 <meta property="og:description" content="Measured errata and interoperability notes for Taiwan's Digital Identity Wallet, from building a third-party wallet.">
 <meta property="og:type" content="article">
+<link rel="alternate" hreflang="en" href="https://bonds-tw.github.io/twdiw/">
+<link rel="alternate" hreflang="zh-Hant" href="https://bonds-tw.github.io/twdiw/zh/">
+<link rel="alternate" hreflang="x-default" href="https://bonds-tw.github.io/twdiw/">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪪</text></svg>">
 </head>
 <body>
@@ -555,8 +558,13 @@
     .ms__body { padding: 1rem 1rem 1.15rem; }
   }
 
+/* ---------- this page only: language switch ---------- */
+.langswitch { display: inline-flex; gap: .5em; align-items: baseline; }
+.langswitch b { font-weight: 700; }
+.langswitch a { text-decoration: none; border-bottom: 1px solid currentColor; }
+
 /* ---------- this page only: code blocks ---------- */
-/* The roadmap page has no <pre>, so these are not in the shared sheet.
+/* The roadmap page has no code blocks, so these are not in the shared sheet.
    Without them a 190-character did:key pushes the whole document sideways —
    measured 1509px against a 986px viewport before this block existed. */
 pre {
@@ -585,6 +593,8 @@ pre.tokens code { white-space: pre-wrap; word-break: break-all; }
       <span>有備而來 · Bond for the Future</span>
       <span>／</span>
       <span>2026-08-16</span>
+      <span>／</span>
+      <span class="langswitch"><b>EN</b> · <a href="/twdiw/zh/" hreflang="zh-Hant" lang="zh-Hant">中文</a></span>
     </div>
     <h1>TWDIW Field Notes</h1>
     <p class="standfirst">
@@ -596,8 +606,9 @@ pre.tokens code { white-space: pre-wrap; word-break: break-all; }
       bent, and which mistakes pass your tests and fail in the field.
     </p>
     <span class="draft-flag">
-      本頁為英文，因為它補的是一份英文文件，而且要能直接送給上游。
-      中文摘要見第 0 節末。All measurements taken 2026-08-16 against production endpoints, read-only.
+      English, because it complements an English document and has to be sendable upstream as-is.
+      A full <a href="/twdiw/zh/" lang="zh-Hant">中文版</a> is maintained alongside it, in the same commit.
+      All measurements taken 2026-08-16 against production endpoints, read-only.
     </span>
   </header>
 
