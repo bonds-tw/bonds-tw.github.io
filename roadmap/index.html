@@ -967,8 +967,8 @@
           </div>
           <p class="ms__goal">原本只寫「資料模型留好接口」。<strong>範圍已擴大成真的做一個第三方皮夾</strong>：官方認證的發行者與驗證者都能跑完整流程，皮夾裡除了我們自己的身分證，還有駕照電子卡等官方憑證。目的不是相容性打勾，是<strong>證明最理想的皮夾長什麼樣子</strong>——把三種信任模型並排，讓它們的差異第一次變得可見。完整規劃在 <code>docs/twdiw-integration-plan.md</code>。</p>
           <div class="meter">
-            <div class="meter__bar"><div class="meter__fill" style="width:22%"></div></div>
-            <span class="meter__pct">22%</span>
+            <div class="meter__bar"><div class="meter__fill" style="width:34%"></div></div>
+            <span class="meter__pct">34%</span>
           </div>
           <ul class="tasks">
             <li>
@@ -982,14 +982,14 @@
               <span class="t-note">新增 <code>jwk_jcs-pub</code> 編解碼，與現有 <code>p256-pub</code> <strong>並存</strong>（我們自己那條離線路徑的 DID 不改）。<br><strong>而且官方皮夾自己的 DID 不符合它宣稱的編碼</strong>：<code>jwk_jcs-pub</code> 的定義就是 JWK 經過 JCS（RFC 8785），鍵序必須 <code>crv &lt; kty &lt; x &lt; y</code>。機關 DID 是 <code>crv,kty,x,y</code> ✅；<strong>官方皮夾的 holder DID 是 <code>crv,x,y,kty</code> ❌</strong>。我們的 <code>DIDKey</code> 有一個 <code>nonCanonicalDID</code> 錯誤案例，存在的理由正是拒絕這種東西——<strong>所以嚴格照規範實作的解析器，會拒絕真實世界唯一存在的那個台灣皮夾。</strong><br>由此定一條不對稱規則：<strong>我們自己產生的一律 JCS 正規；解析別人的一律不要求正規。</strong> 正規化是我們對自己的義務，拿它去否決別人只會讓我們無法互通。<br>閘門：用官方那個非正規 holder DID 當測試向量，必須解得開。不碰網路，可離線做完。</span>
             </li>
             <li>
-              <span class="chip chip--todo">待辦</span>
-              <span class="t-name">M5.2　OID4VCI 領卡（沙盒）</span>
-              <span class="t-note">五步實測順序：<code>credential-offer-object</code> → <code>.well-known/openid-credential-issuer</code> → <code>/token</code>（pre-authorized_code + tx_code）→ <code>/credential</code>（proof JWT，<code>typ: openid4vci-proof+jwt</code>，<code>aud</code> <strong>結尾有斜線</strong>）→ 抓卡面圖。<code>CredentialStore</code> 本來就是一檔一憑證、有 <code>allIDs()</code>，<strong>結構上已經是多卡的</strong>，不必改。<br>⚠️ <strong><code>client_id</code> 要送什麼是「先量再決定」，不是先決定。</strong> 送 <code>moda_dw</code> 一定會通，但不該長期冒用官方 App 的識別字串。做法是先送 <code>tw.bonds.backupTW</code> 量它會不會被拒：通過就用我們自己的；<strong>被拒的話，那件事本身就是要回報的發現</strong>——TWDIW 沒有辦法讓第三方皮夾正當地表明身分，於是唯一能跑的方式是冒充。<br>前置：沙盒帳號申請的對象是發行／驗證端，<strong>但 demo 站的「訪客領卡」不需要帳號</strong>，可以先不申請就跑通。要不要申請、要不要按同意服務條款，由使用者決定。</span>
+              <span class="chip chip--blocked">卡住</span>
+              <span class="t-name">M5.2　OID4VCI 領卡（沙盒）——卡在兩個必須先決定的事</span>
+              <span class="t-note">五步實測順序：<code>credential-offer-object</code> → <code>.well-known/openid-credential-issuer</code> → <code>/token</code>（pre-authorized_code + tx_code）→ <code>/credential</code>（proof JWT，<code>typ: openid4vci-proof+jwt</code>，<code>aud</code> <strong>結尾有斜線</strong>）→ 抓卡面圖。<code>CredentialStore</code> 本來就是一檔一憑證、有 <code>allIDs()</code>，<strong>結構上已經是多卡的</strong>，不必改。<br>⚠️ <strong><code>client_id</code> 要送什麼是「先量再決定」，不是先決定。</strong> 送 <code>moda_dw</code> 一定會通，但不該長期冒用官方 App 的識別字串。做法是先送 <code>tw.bonds.backupTW</code> 量它會不會被拒：通過就用我們自己的；<strong>被拒的話，那件事本身就是要回報的發現</strong>——TWDIW 沒有辦法讓第三方皮夾正當地表明身分，於是唯一能跑的方式是冒充。<br>前置：沙盒帳號申請的對象是發行／驗證端，<strong>但 demo 站的「訪客領卡」不需要帳號</strong>，可以先不申請就跑通。要不要申請、要不要按同意服務條款，由使用者決定。<br><br><strong>⛔ 2026-08-16 對抗式查證擋下兩件事，兩件都要在寫第一行程式之前決定：</strong><br><strong>①「這個發行者是誰」沒有人檢查。</strong> 領卡流程的 URL 全部來自一張 QR，而其中一步會用持有人金鑰簽一個 proof JWT、<code>aud</code> 直接填對方給的值。<strong>任何人印一張 QR，就能讓皮夾對他指定的 URL 產生一個由裝置長期金鑰簽出來、內容由他選的 JWT。</strong> 本專案對這類輸入已經有立場（<code>MOICACallbackRouter</code> 檔頭：inbound URL 是 untrusted input，只能當「再去查一次」的訊號）。而那 43 筆信任清單正好可以拿來比對 issuer DID。<br><strong>② 要用哪一把持有人金鑰。</strong> 若沿用現有那把唯一的 <code>DeviceKey</code>，TWDIW 憑證的 <code>cnf.jwk</code> 會被寫進政府發行端的資料庫，<strong>而那串位元組正是任何一個離線查驗方看到的識別碼</strong>。我們刻意讓自然人憑證那條路拿不到統一編號，結果會從另一扇門交出一個更好用的索引——而且<strong>這條汙染不需要任何人上網才生效</strong>，離線出示的那張卡上就帶著這個公鑰。→ 至少一卡一金鑰；而一旦有第二把，<code>IdentityReset</code> 只吃單一 <code>keyTag</code> 就不夠用了，「重設身分」會漏掉 TWDIW 那幾把。</span>
             </li>
             <li>
-              <span class="chip chip--todo">待辦</span>
+              <span class="chip chip--done">已完成</span>
               <span class="t-name">M5.3　SD-JWT VC 讀取與選擇性揭露</span>
-              <span class="t-note">TWDIW 把 <code>_sd</code> 放在 <code>vc.credentialSubject</code> 底下，<strong>不是</strong> SD-JWT VC 標準的頂層 claims（沒有 <code>vct</code>，用 <code>vc.type</code>）——是 VCDM 1.1 與 SD-JWT 的混血。我們的 <code>SelectiveDisclosure</code> 已經是同一套加鹽承諾機制，<strong>接得上，但要另寫 adapter，不要把我們的格式改成它的</strong>。<br>閘門：駕照電子卡六個揭露（<code>name</code>／<code>id_number</code>／<code>roc_birthday</code>／<code>type</code>／<code>controlnumber</code>／<code>gDate</code>）全部解得開，且既有三條紅線測試要覆蓋 TWDIW 格式——尤其<strong>拒收未被承諾的揭露</strong>。</span>
+              <span class="t-note">TWDIW 把 <code>_sd</code> 放在 <code>vc.credentialSubject</code> 底下，<strong>不是</strong> SD-JWT VC 標準的頂層 claims（沒有 <code>vct</code>，用 <code>vc.type</code>）——是 VCDM 1.1 與 SD-JWT 的混血。我們的 <code>SelectiveDisclosure</code> 已經是同一套加鹽承諾機制，<strong>接得上，但要另寫 adapter，不要把我們的格式改成它的</strong>。<br><strong>做完了，而且比預期簡單——因為密碼學早就是共用的。</strong> SD-JWT 的摘要是對「揭露的 base64url 字串本身」做 SHA-256，不是對解碼後的 JSON，而本專案的 <code>Disclosure.digest</code> 早就是這個算法。<strong>而且不是照規範推的，是拿正式資料驗的</strong>：用 2025-10-07 一張真實駕照電子卡的六段揭露，重算出它 <code>_sd</code> 公開的那兩個值（<code>id_number</code> 與 <code>roc_birthday</code>），兩個都對得上；對解碼後的位元組做雜湊則一個都對不上。<br>順帶抓到自己抄錯的三個值：姓名是<strong>陳筱玲</strong>不是陳籍玲、身分證是 <code>A234567890</code> <strong>十碼不是十一碼</strong>、管轄編號中間沒有空格。三個都是因為從渲染後的頁面上讀而不是把 base64 解開。<strong>渲染過的內容不可以當資料來源</strong>——一個十一碼的「身分證統一編號」留在文件裡，後面每個讀它的人都會被誤導。<br>釘住的：拒收未被承諾的揭露（紅線）、少給揭露是正常的、<code>alg</code> 不是 ES256 一律拒、<code>_sd_alg</code> 不認識就拒不要假設、<code>statusListIndex</code> 在正式環境<strong>是字串</strong>（只當數字讀會靜默丟掉整個 status 條目，而沒有 status 的憑證就是永遠不會被查撤銷的憑證）。1,060 個測試通過。</span>
             </li>
             <li>
               <span class="chip chip--todo">待辦</span>
