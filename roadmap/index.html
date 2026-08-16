@@ -967,8 +967,8 @@
           </div>
           <p class="ms__goal">原本只寫「資料模型留好接口」。<strong>範圍已擴大成真的做一個第三方皮夾</strong>：官方認證的發行者與驗證者都能跑完整流程，皮夾裡除了我們自己的身分證，還有駕照電子卡等官方憑證。目的不是相容性打勾，是<strong>證明最理想的皮夾長什麼樣子</strong>——把三種信任模型並排，讓它們的差異第一次變得可見。完整規劃在 <code>docs/twdiw-integration-plan.md</code>。</p>
           <div class="meter">
-            <div class="meter__bar"><div class="meter__fill" style="width:12%"></div></div>
-            <span class="meter__pct">12%</span>
+            <div class="meter__bar"><div class="meter__fill" style="width:22%"></div></div>
+            <span class="meter__pct">22%</span>
           </div>
           <ul class="tasks">
             <li>
@@ -977,7 +977,7 @@
               <span class="t-note">八項事實全部自己量過、可複現。三個決定性的：<br><strong>①「第三方皮夾」在 TWDIW 裡不存在。</strong> 發行端與驗證端都要申請沙盒帳號、自架、做 UAT；<strong>皮夾沒有申請表、沒有註冊、沒有 attestation</strong>。denkeni 手冊裡標題叫「If You're Building a Third-Party Issuer or Verifier Software」的那一節<strong>是空的</strong>，而第三方<em>皮夾</em>連標題都沒有。<br><strong>② <code>client_id</code> 不是名單，是回音。</strong> 證據鏈全在 MIT 授權的官方原始碼裡：發行端自己簽的 ID Token 把 <code>aud</code> 寫死成 <code>"moda_dw"</code>（<code>CredentialService.java:1715</code>）→ OID4VCI handler 從那個 <code>aud</code> 讀出 <code>client_id</code>（<code>CredentialIssuer.java:225</code>）→ <code>/token</code> 拿它比對（<code>:1196</code>）→ proof 的 <code>iss</code> 只跟它比（<code>:1741</code>）。<strong>整條鏈驗的是「你送的字串等於你送的字串」。</strong> 對我們是入場沒有技術門檻；對 TWDIW 是一個要回報的缺口——<strong>憑證與「哪個皮夾拿走它」之間沒有任何綁定</strong>。真正被驗的是金鑰：proof 簽章會用 DID 取出的公鑰驗過，那把公鑰寫進 <code>cnf.jwk</code>。<strong>裝置綁定是真的，皮夾身分是假的。</strong><br><strong>③ 我們現在的 DID 會被官方拒絕。</strong> TWDIW 用 multicodec <code>0xEB51</code>（<code>jwk_jcs-pub</code>，varint <code>D1 D6 03</code>），payload 是整份 JWK 的 JSON；我逐位元組解過兩個真實 DID（129 bytes，前 3 是 D1D603，其餘 126 是 JWK 文字）。官方後端的解法是 <code>did.substring(1)</code> → Base58 → <code>substring(6)</code>「去掉prefix D1D603」——<strong>寫死三個位元組、不檢查 multibase、不檢查 multicodec</strong>。我們的 <code>DIDKey</code> 用 <code>p256-pub</code>（0x1200）產 <code>did:key:zDn…</code>，送過去必然解析失敗。</span>
             </li>
             <li>
-              <span class="chip chip--todo">待辦</span>
+              <span class="chip chip--done">已完成</span>
               <span class="t-name">M5.1　did:key 第二種拼法＋解析寬容規則</span>
               <span class="t-note">新增 <code>jwk_jcs-pub</code> 編解碼，與現有 <code>p256-pub</code> <strong>並存</strong>（我們自己那條離線路徑的 DID 不改）。<br><strong>而且官方皮夾自己的 DID 不符合它宣稱的編碼</strong>：<code>jwk_jcs-pub</code> 的定義就是 JWK 經過 JCS（RFC 8785），鍵序必須 <code>crv &lt; kty &lt; x &lt; y</code>。機關 DID 是 <code>crv,kty,x,y</code> ✅；<strong>官方皮夾的 holder DID 是 <code>crv,x,y,kty</code> ❌</strong>。我們的 <code>DIDKey</code> 有一個 <code>nonCanonicalDID</code> 錯誤案例，存在的理由正是拒絕這種東西——<strong>所以嚴格照規範實作的解析器，會拒絕真實世界唯一存在的那個台灣皮夾。</strong><br>由此定一條不對稱規則：<strong>我們自己產生的一律 JCS 正規；解析別人的一律不要求正規。</strong> 正規化是我們對自己的義務，拿它去否決別人只會讓我們無法互通。<br>閘門：用官方那個非正規 holder DID 當測試向量，必須解得開。不碰網路，可離線做完。</span>
             </li>
