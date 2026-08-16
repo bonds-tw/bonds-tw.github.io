@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TWDIW Field Notes — what an implementer runs into</title>
+<meta name="description" content="Measured errata and interoperability notes for Taiwan's Digital Identity Wallet (TWDIW), written from building a third-party holder. Complements denkeni's Missing Manual.">
+<meta property="og:title" content="TWDIW Field Notes">
+<meta property="og:description" content="Measured errata and interoperability notes for Taiwan's Digital Identity Wallet, from building a third-party wallet.">
+<meta property="og:type" content="article">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪪</text></svg>">
+</head>
+<body>
+<style>
+  :root {
+    --ground: #F1F3EF;
+    --surface: #FAFBF8;
+    --surface-2: #E9EDE6;
+    --line: #D6DCD2;
+    --line-soft: #E4E9E0;
+    --ink: #161C18;
+    --ink-soft: #4C564F;
+    --ink-faint: #77817A;
+    --accent: #9C6114;
+    --accent-bg: #F3E7D4;
+    --ok: #2C6B4E;
+    --ok-bg: #DDEBE2;
+    --warn: #9C6114;
+    --warn-bg: #F3E7D4;
+    --blocked: #A03A30;
+    --blocked-bg: #F5DFDC;
+    --idle: #6B756E;
+    --idle-bg: #E4E9E0;
+
+    --display: "Songti TC", "Noto Serif TC", "Source Han Serif TC", "Source Han Serif TW", Georgia, serif;
+    --body: "PingFang TC", "Noto Sans TC", "Heiti TC", system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, "Roboto Mono", monospace;
+
+    --step--1: 0.78rem;
+    --step-0: 0.95rem;
+    --step-1: 1.13rem;
+    --step-2: 1.42rem;
+    --step-3: 1.9rem;
+    --step-4: 2.7rem;
+
+    --rail: 3.5rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #0F1513;
+      --surface: #161E1B;
+      --surface-2: #1D2724;
+      --line: #27322E;
+      --line-soft: #202A27;
+      --ink: #E7ECE7;
+      --ink-soft: #9CA89F;
+      --ink-faint: #78837B;
+      --accent: #D9922F;
+      --accent-bg: #2A2013;
+      --ok: #56B98A;
+      --ok-bg: #14241C;
+      --warn: #D9922F;
+      --warn-bg: #2A2013;
+      --blocked: #E0685A;
+      --blocked-bg: #2B1815;
+      --idle: #7C8880;
+      --idle-bg: #1D2724;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #0F1513;
+    --surface: #161E1B;
+    --surface-2: #1D2724;
+    --line: #27322E;
+    --line-soft: #202A27;
+    --ink: #E7ECE7;
+    --ink-soft: #9CA89F;
+    --ink-faint: #78837B;
+    --accent: #D9922F;
+    --accent-bg: #2A2013;
+    --ok: #56B98A;
+    --ok-bg: #14241C;
+    --warn: #D9922F;
+    --warn-bg: #2A2013;
+    --blocked: #E0685A;
+    --blocked-bg: #2B1815;
+    --idle: #7C8880;
+    --idle-bg: #1D2724;
+  }
+
+  :root[data-theme="light"] {
+    --ground: #F1F3EF;
+    --surface: #FAFBF8;
+    --surface-2: #E9EDE6;
+    --line: #D6DCD2;
+    --line-soft: #E4E9E0;
+    --ink: #161C18;
+    --ink-soft: #4C564F;
+    --ink-faint: #77817A;
+    --accent: #9C6114;
+    --accent-bg: #F3E7D4;
+    --ok: #2C6B4E;
+    --ok-bg: #DDEBE2;
+    --warn: #9C6114;
+    --warn-bg: #F3E7D4;
+    --blocked: #A03A30;
+    --blocked-bg: #F5DFDC;
+    --idle: #6B756E;
+    --idle-bg: #E4E9E0;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: var(--step-0);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 68rem;
+    margin: 0 auto;
+    padding: clamp(1.5rem, 4vw, 3.5rem) clamp(1rem, 4vw, 2.5rem) 5rem;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2.5rem, 5vw, 4rem);
+  }
+
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead { display: flex; flex-direction: column; gap: 1.25rem; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: var(--step--1);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem 1rem;
+    align-items: center;
+  }
+
+  .masthead h1 {
+    font-family: var(--display);
+    font-size: var(--step-4);
+    line-height: 1.15;
+    font-weight: 600;
+    margin: 0;
+    text-wrap: balance;
+    letter-spacing: 0.01em;
+  }
+
+  .standfirst {
+    margin: 0;
+    max-width: 44rem;
+    color: var(--ink-soft);
+    font-size: var(--step-1);
+    line-height: 1.75;
+  }
+
+  .draft-flag {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    align-self: flex-start;
+    padding: 0.3rem 0.7rem;
+    background: var(--warn-bg);
+    color: var(--warn);
+    border: 1px solid color-mix(in srgb, var(--warn) 30%, transparent);
+    border-radius: 2px;
+    font-family: var(--mono);
+    font-size: var(--step--1);
+    letter-spacing: 0.04em;
+  }
+
+  /* ---------- stat band ---------- */
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .stat {
+    background: var(--surface);
+    padding: 1.1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .stat dt {
+    font-family: var(--mono);
+    font-size: var(--step--1);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0;
+  }
+
+  .stat dd {
+    margin: 0;
+    font-family: var(--display);
+    font-size: var(--step-3);
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat dd small {
+    font-family: var(--body);
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+    letter-spacing: 0;
+  }
+
+  .stat--blocked dd { color: var(--blocked); }
+  .stat--ok dd { color: var(--ok); }
+
+  /* ---------- generic section ---------- */
+
+  .section { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .section > header { display: flex; flex-direction: column; gap: 0.5rem; }
+
+  .section h2 {
+    font-family: var(--display);
+    font-size: var(--step-2);
+    font-weight: 600;
+    margin: 0;
+    padding-bottom: 0.6rem;
+    border-bottom: 2px solid var(--ink);
+    letter-spacing: 0.02em;
+  }
+
+  .section > header p {
+    margin: 0;
+    color: var(--ink-soft);
+    max-width: 46rem;
+  }
+
+  /* ---------- blocker callout ---------- */
+
+  .blocker {
+    border: 1px solid color-mix(in srgb, var(--blocked) 35%, transparent);
+    border-left: 4px solid var(--blocked);
+    background: var(--blocked-bg);
+    border-radius: 3px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .blocker h3 {
+    margin: 0;
+    font-family: var(--body);
+    font-size: var(--step-1);
+    font-weight: 600;
+    color: var(--blocked);
+  }
+
+  .blocker p { margin: 0; color: var(--ink-soft); }
+  .blocker p strong { color: var(--ink); }
+
+  .blocker.blocker--resolved {
+    border-color: color-mix(in srgb, var(--ok) 35%, transparent);
+    border-left-color: var(--ok);
+    background: var(--ok-bg);
+  }
+  .blocker.blocker--resolved h3 { color: var(--ok); }
+
+  /* ---------- milestone track ---------- */
+
+  .track { display: flex; flex-direction: column; gap: 1rem; }
+
+  .ms {
+    display: grid;
+    grid-template-columns: var(--rail) 1fr;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .ms__rail {
+    background: var(--surface-2);
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.1rem 0;
+    gap: 0.5rem;
+  }
+
+  .ms__id {
+    font-family: var(--mono);
+    font-size: var(--step-0);
+    font-weight: 600;
+    color: var(--ink-soft);
+    letter-spacing: 0.02em;
+  }
+
+  .ms__dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--idle);
+    flex: none;
+  }
+  .ms--active .ms__dot { background: var(--warn); }
+  .ms--blocked .ms__dot { background: var(--blocked); }
+  .ms--done .ms__dot { background: var(--ok); }
+
+  .ms__body {
+    padding: 1.1rem 1.35rem 1.35rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    min-width: 0;
+  }
+
+  .ms__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 0.9rem;
+  }
+
+  .ms__title {
+    margin: 0;
+    font-family: var(--display);
+    font-size: var(--step-1);
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .ms__meta {
+    font-family: var(--mono);
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+    letter-spacing: 0.04em;
+  }
+
+  .ms__goal { margin: 0; color: var(--ink-soft); max-width: 48rem; }
+
+  .ms__goal em {
+    font-style: normal;
+    color: var(--ink);
+    border-bottom: 1px solid var(--accent);
+  }
+
+  /* progress meter */
+
+  .meter {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .meter__bar {
+    flex: 1;
+    height: 5px;
+    background: var(--surface-2);
+    border-radius: 3px;
+    overflow: hidden;
+    min-width: 4rem;
+  }
+
+  .meter__fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+  }
+  .ms--done .meter__fill { background: var(--ok); }
+  .ms--blocked .meter__fill { background: var(--blocked); }
+
+  .meter__pct {
+    font-family: var(--mono);
+    font-size: var(--step--1);
+    color: var(--ink-faint);
+    font-variant-numeric: tabular-nums;
+    min-width: 2.8rem;
+    text-align: right;
+  }
+
+  /* task list */
+
+  .tasks {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--line-soft);
+  }
+
+  .tasks li {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr;
+    gap: 0.35rem 0.9rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--line-soft);
+    align-items: baseline;
+  }
+
+  .tasks li:last-child { border-bottom: 0; padding-bottom: 0; }
+
+  .tasks .t-name { color: var(--ink); min-width: 0; }
+
+  .tasks .t-note {
+    grid-column: 2;
+    color: var(--ink-faint);
+    font-size: var(--step--1);
+    line-height: 1.6;
+  }
+
+  .chip {
+    justify-self: start;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.45rem;
+    border-radius: 2px;
+    white-space: nowrap;
+    border: 1px solid transparent;
+  }
+
+  .chip--done    { color: var(--ok);      background: var(--ok-bg);      border-color: color-mix(in srgb, var(--ok) 28%, transparent); }
+  .chip--partial { color: var(--warn);    background: var(--warn-bg);    border-color: color-mix(in srgb, var(--warn) 28%, transparent); }
+  .chip--blocked { color: var(--blocked); background: var(--blocked-bg); border-color: color-mix(in srgb, var(--blocked) 28%, transparent); }
+  .chip--todo    { color: var(--idle);    background: var(--idle-bg);    border-color: color-mix(in srgb, var(--idle) 25%, transparent); }
+  .chip--spike   { color: var(--ink-soft);background: var(--surface-2);  border-color: var(--line); }
+
+  /* ---------- tables ---------- */
+
+  .table-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: var(--surface);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--step-0);
+    min-width: 40rem;
+  }
+
+  thead th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: var(--step--1);
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface-2);
+    white-space: nowrap;
+  }
+
+  tbody td {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--line-soft);
+    vertical-align: top;
+    color: var(--ink-soft);
+  }
+
+  tbody tr:last-child td { border-bottom: 0; }
+
+  tbody td:first-child { color: var(--ink); }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.86em;
+    background: var(--surface-2);
+    padding: 0.1rem 0.35rem;
+    border-radius: 2px;
+    color: var(--ink);
+    word-break: break-word;
+  }
+
+  .verdict { color: var(--ink); font-weight: 600; }
+
+  /* ---------- decisions ---------- */
+
+  .decisions { display: flex; flex-direction: column; gap: 1rem; }
+
+  .decision {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: 3px;
+    padding: 1.1rem 1.35rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .decision h3 {
+    margin: 0;
+    font-size: var(--step-0);
+    font-family: var(--body);
+    font-weight: 600;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: baseline;
+  }
+
+  .decision h3 .d-id {
+    font-family: var(--mono);
+    font-size: var(--step--1);
+    color: var(--accent);
+    letter-spacing: 0.06em;
+  }
+
+  .decision p { margin: 0; color: var(--ink-soft); }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding-top: 1.5rem;
+    color: var(--ink-faint);
+    font-size: var(--step--1);
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  @media (max-width: 34rem) {
+    :root { --rail: 2.6rem; }
+    .tasks li { grid-template-columns: 1fr; }
+    .tasks .t-note { grid-column: 1; }
+    .ms__body { padding: 1rem 1rem 1.15rem; }
+  }
+
+/* ---------- this page only: code blocks ---------- */
+/* The roadmap page has no <pre>, so these are not in the shared sheet.
+   Without them a 190-character did:key pushes the whole document sideways —
+   measured 1509px against a 986px viewport before this block existed. */
+pre {
+  max-width: 100%;
+  overflow-x: auto;
+  background: var(--panel, #fff);
+  border: 1px solid var(--line, #d8d8d0);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin: 18px 0;
+  font-size: .82rem;
+  line-height: 1.7;
+}
+pre code { display: block; white-space: pre; }
+/* Identifiers wrap instead of scrolling: a DID is one unbroken token, and
+   horizontal scrolling inside a code block is unusable on a phone. */
+pre.tokens code { white-space: pre-wrap; word-break: break-all; }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">
+      <span>Bonds.tw</span>
+      <span>／</span>
+      <span>有備而來 · Bond for the Future</span>
+      <span>／</span>
+      <span>2026-08-16</span>
+    </div>
+    <h1>TWDIW Field Notes</h1>
+    <p class="standfirst">
+      Measured errata for Taiwan's Digital Identity Wallet (TWDIW), written while building a
+      third-party holder. It complements
+      <a href="https://docs.denkeni.org/twdiw">denkeni's <em>Missing Manual</em></a>, which explains
+      what the tools are and how the flows run. This page is about the things you only find out by
+      running into them: where the documentation and the deployment disagree, where the specs are
+      bent, and which mistakes pass your tests and fail in the field.
+    </p>
+    <span class="draft-flag">
+      本頁為英文，因為它補的是一份英文文件，而且要能直接送給上游。
+      中文摘要見第 0 節末。All measurements taken 2026-08-16 against production endpoints, read-only.
+    </span>
+  </header>
+
+  <section class="section">
+    <header>
+      <h2>0. How to read this page</h2>
+      <p>Every claim below carries an evidence grade. This matters more than usual here: some of
+      these are defect reports aimed at a government system, and a claim that cannot survive
+      "did you actually test that?" damages the ones that can.</p>
+    </header>
+    <ul class="tasks">
+      <li>
+        <span class="chip chip--done">MEASURED</span>
+        <span class="t-name">A read-only request to a public production endpoint</span>
+        <span class="t-note">The <code>curl</code> is given. Anyone can re-run it. Date of measurement is stated because these endpoints change.</span>
+      </li>
+      <li>
+        <span class="chip chip--partial">CODE</span>
+        <span class="t-name">Read from the MIT-licensed source</span>
+        <span class="t-note"><code>moda-gov-tw/TWDIW-official-app</code>, read at <code>HEAD</code> on 2026-08-16 (last push 2026-07-27). ⚠️ <strong>Reading the published source does not establish what the deployed build does.</strong> Where a claim is about live behaviour and the evidence is only source, it says so.</span>
+      </li>
+      <li>
+        <span class="chip chip--blocked">n=1</span>
+        <span class="t-name">Single sample, or second-hand</span>
+        <span class="t-note">Recorded because it is useful to know, <strong>not</strong> because it supports a conclusion. Do not cite these upstream without collecting more.</span>
+      </li>
+    </ul>
+    <p style="margin-top:20px">
+      <strong>What this page does not have:</strong> we have never actually collected a credential.
+      Nothing here required issuing one, and nothing here should be read as "we ran the whole flow
+      and it worked". The one step that needs a form submission is the one step we have not taken.
+    </p>
+    <p>
+      <strong>中文摘要：</strong>這一頁是做第三方皮夾時撞到的牆——文件與實際部署的差別、規範偏差、
+      量到的數字，以及七件要回報上游的缺陷。每一條都標了證據等級，因為其中幾條是要送到
+      數發部手上的，而一條經不起「你們實測過嗎」的主張會連累其他站得住的。
+    </p>
+  </section>
+
+  <section class="section">
+    <header>
+      <h2>1. There is no third-party wallet</h2>
+      <p>Not "it is hard". The role does not exist in the documentation, the sandbox, or the data model.</p>
+    </header>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th scope="col">Role</th><th scope="col">What you must do to participate</th></tr></thead>
+        <tbody>
+          <tr><td>Issuer</td><td>Apply for a sandbox account → self-host → UAT with the TWDIW team → production</td></tr>
+          <tr><td>Verifier</td><td>Same, with the verifier stack</td></tr>
+          <tr><td><strong>Wallet (holder)</strong></td><td><strong>Not documented. No application form, no registration, no attestation.</strong></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:18px">
+      The account application page is addressed to "products, services or programs integrating with
+      the sandbox", and points at <code>issuer-sandbox</code> and <code>verifier-sandbox</code>.
+      There is no <code>wallet-sandbox</code>. In the <em>Missing Manual</em> itself, the section
+      headed <strong>"If You're Building a Third-Party Issuer or Verifier Software" is empty</strong>,
+      and third-party <em>wallets</em> do not have a heading at all.
+    </p>
+
+    <div class="ms__body" style="margin-top:24px">
+      <ul class="tasks">
+        <li>
+          <span class="chip chip--partial">CODE</span>
+          <span class="t-name"><code>client_id</code> is not a registry — it is an echo</span>
+          <span class="t-note">
+            The issuer signs an ID Token whose <code>aud</code> is the hardcoded string <code>"moda_dw"</code>
+            (<code>twdiw-vc-handler/…/CredentialService.java</code>). The OID4VCI handler then reads
+            <code>client_id</code> back out of <em>that</em> <code>aud</code>
+            (<code>twdiw-oid4vci-handler/…/CredentialIssuer.java</code>) and stores it with the
+            pre-authorized code. At <code>/token</code> the wallet's <code>client_id</code> is matched
+            against that stored value, and the proof JWT's <code>iss</code> is matched against the
+            same value again.
+            <br><strong>The chain checks that the string you sent equals the string you sent.</strong>
+            There are 49 tables in the schema and none of them is a client, wallet, app or device
+            registry. No <code>client_secret</code>, no client assertion, no mTLS, no Play Integrity,
+            no App Attest, no DeviceCheck.
+            <br>Two further findings from the same read: the ID Token's signature is extracted and then
+            never used, and <code>AccessTokenFilter</code>'s validation is commented out with the note
+            「尚未啟用 AccessToken 驗證」 while <code>/api/**</code> is <code>permitAll</code>.
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--spike">Careful</span>
+          <span class="t-name">What this does and does not mean</span>
+          <span class="t-note">
+            It does <strong>not</strong> mean anyone can obtain a credential. The real gate on issuance
+            is the pre-authorized code — the QR — plus an optional <code>tx_code</code>. The defensible
+            statement is narrower and stronger:
+            <br><strong>whoever can obtain the QR can complete the entire flow with any home-made
+            wallet; the official app has no cryptographic or registration privilege.</strong>
+            <br>And a limit we cannot remove by reading: we have not sent a single request to a
+            production issuance endpoint, so nothing here excludes a network-layer control (WAF, API
+            gateway, mTLS, IP allowlist) that is not in the repository.
+          </span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <header>
+      <h2>2. did:key — the spelling is not the one you have implemented</h2>
+      <p>This is where a wallet fails first, and it fails as a parse error two layers away from the cause.</p>
+    </header>
+    <p>
+      TWDIW uses multicodec <strong><code>0xEB51</code> (<code>jwk_jcs-pub</code>)</strong>, whose
+      payload is the JWK itself as JSON text. Not <code>p256-pub</code> (<code>0x1200</code>), which
+      carries a 33-byte compressed point and is what most did:key implementations emit for P-256.
+      Decoded byte by byte from a real trust-list entry:
+    </p>
+    <pre><code>129 bytes total
+first 3 bytes  = D1 D6 03      # LEB128 varint for 0xEB51
+remaining 126  = {"crv":"P-256","kty":"EC","x":"kY6ina…","y":"c5je-…"}</code></pre>
+    <p>
+      The server side strips it with a <strong>hardcoded three-byte slice</strong>, checking neither
+      the multibase character nor the multicodec:
+    </p>
+    <pre><code>String did_hex_prefix = CryptoHelper.convertBinaryToHexString(Base58.decode(did.substring(1)));
+String did_hex = did_hex_prefix.substring(6);   // 去掉prefix D1D603
+String did_jwk = new String(CryptoHelper.hexStringToByteArray(did_hex));</code></pre>
+    <p>
+      So a <code>did:key:zDn…</code> handed to TWDIW loses three bytes and is then parsed as JSON.
+      You get a JSON error, and the actual cause — the wrong multicodec — is not mentioned anywhere.
+    </p>
+
+    <div class="ms__body" style="margin-top:24px">
+      <ul class="tasks">
+        <li>
+          <span class="chip chip--done">MEASURED</span>
+          <span class="t-name">Every production issuer DID is JCS-canonical</span>
+          <span class="t-note">
+            All 43 entries in the production trust list: multicodec <code>0xEB51</code> ×43, JWK member
+            order <code>crv,kty,x,y</code> ×43, self-signature verifies ×43, embedded DID document
+            <code>id</code> matches ×43, header <code>jwk</code> matches the DID's key ×43.
+            <strong>The issuer side is clean.</strong>
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--blocked">n=1</span>
+          <span class="t-name">The official wallet's own holder DID is not canonical</span>
+          <span class="t-note">
+            <code>jwk_jcs-pub</code> means the JWK is canonicalised per RFC 8785, which orders members
+            <code>crv</code> &lt; <code>kty</code> &lt; <code>x</code> &lt; <code>y</code>. The one
+            holder DID we have decoded is <code>crv, x, y, kty</code> — <code>kty</code> last.
+            <br>⚠️ <strong>One sample, from documentation rather than from a wallet we ran, with no app
+            version recorded.</strong> Enough to make a decision about how to write a parser; not
+            enough to file as a defect. We would need several DIDs from a stated build first.
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--spike">Rule</span>
+          <span class="t-name">Emit strictly, accept loosely — and never compare raw DID strings</span>
+          <span class="t-note">
+            Canonicalise everything you emit. Do <strong>not</strong> require canonicality of what you
+            accept: a strict resolver rejects the only Taiwanese wallet in existence, and the key bytes
+            are unambiguous either way.
+            <br>That reopens a real problem, because everything downstream compares DIDs
+            <em>as strings</em> — a JWS <code>kid</code> against an <code>issuer</code>, a presenter's
+            DID against <code>credentialSubject.id</code>. Close it by comparing the
+            <strong>canonical form</strong>, computed from the key, rather than the string as it
+            arrived. Two DIDs name one key exactly when their canonical forms match, and no spelling
+            can hide behind another.
+          </span>
+        </li>
+      </ul>
+    </div>
+
+    <p style="margin-top:20px"><strong>Test vectors.</strong> Both are real, from production:</p>
+    <pre class="tokens"><code># Ministry of Digital Affairs (canonical — must round-trip to itself)
+did:key:z2dmzD81cgPx8Vki7JbuuMmFYrWPgYoytykUZ3eyqht1j9Kbrzifm9txeerMVc9oLUg2nBJJnUtgYcAYd35rw1rCLq8y3bLDDBUPH5yTYB7ocY7oPESPBXqubuwMcRzw9evbeHHyFkwsmDc43myibDChGhDk8zrgZDB4KNyXPiQvkktUwn
+
+# A wallet holder DID (NOT canonical — must still decode)
+did:key:z2dmzD81cgPx8Vki7JbuuMmFYrWPodrZSqMbCy9Ndu4UgUGy3RNkhH479eLPpbfAhVSNu7B4oJvUwLzyxiP4Jt5k9cqqmChanxAazTGxJMvGxYDApNkXeDW5MPZgZRkjRgD1yaig5KCEgAaVbg8zrvYjMTi1BzqdDpPpkeSFmJwiej9YNY</code></pre>
+  </section>
+
+  <section class="section">
+    <header>
+      <h2>3. The credential is an SD-JWT, and nothing tells you so</h2>
+      <p>This is the single most expensive thing to get wrong, because the wrong implementation passes every test you would think to write.</p>
+    </header>
+    <div class="ms__body">
+      <ul class="tasks">
+        <li>
+          <span class="chip chip--done">MEASURED</span>
+          <span class="t-name">The metadata says <code>jwt_vc_json</code>, for everything</span>
+          <span class="t-note">
+            <code>GET https://issuer-oid4vci.wallet.gov.tw/api/issuer/00000000/.well-known/openid-credential-issuer</code>
+            → 701,000 bytes, 882 credential configurations.
+            <br><strong><code>format</code> distribution: <code>{jwt_vc_json: 882}</code>. Occurrences of
+            the string <code>sd-jwt</code> in the whole document: 0. Of <code>_sd</code>: 0. Of
+            <code>selective</code> or <code>disclosure</code>: 0.</strong>
+            <br>What actually comes back is <code>typ: vc+sd-jwt</code> with <code>~</code>-separated
+            disclosures. <strong>A conformant OID4VCI client has no field it can read to discover this.
+            The <code>~</code> is the only signal there is.</strong>
+            <br>(Operational aside: 701 KB of metadata to obtain one configuration. Fetch it once.)
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--done">MEASURED</span>
+          <span class="t-name">The digest is over the base64url string, not the decoded JSON</span>
+          <span class="t-note">
+            Both readings are plausible and only one is right. Getting it wrong yields a wallet that
+            finds no match for any honest disclosure and reports every real card as a forgery.
+            <br>Verified against production values rather than against a reading of the spec: six real
+            disclosures from a driving licence issued 2025-10-07, and two published
+            <code>_sd</code> entries from the same credential.
+            <br><strong><code>base64url(SHA-256(&lt;the disclosure's own base64url string, ASCII&gt;))</code>
+            reproduces both. Hashing the decoded bytes reproduces neither.</strong>
+            <br>Run it yourself:
+          </span>
+        </li>
+      </ul>
+    </div>
+    <pre><code>python3 - &lt;&lt;'EOF'
+import hashlib, base64
+b64u_e = lambda b: base64.urlsafe_b64encode(b).decode().rstrip('=')
+D = "WyJwbHowWFN6LW9CSEUwZTUzTFVBeWNBIiwiaWRfbnVtYmVyIiwiQTIzNDU2Nzg5MCJd"
+print(b64u_e(hashlib.sha256(D.encode('ascii')).digest()))
+# ApkeYAR85EzxAHS1ojnNHhG7wnCDyTt4_iCIX2VKxaw  ← the published _sd entry
+EOF</code></pre>
+
+    <div class="ms__body" style="margin-top:24px">
+      <ul class="tasks">
+        <li>
+          <span class="chip chip--partial">CODE</span>
+          <span class="t-name">It is a hybrid: SD-JWT inside a VCDM 1.1 <code>vc</code> claim</span>
+          <span class="t-note">
+            <code>_sd</code> and <code>_sd_alg</code> live under <code>vc.credentialSubject</code>, not at
+            the top level. The type is <code>vc.type[1]</code>, not <code>vct</code>. So a reader written
+            strictly to SD-JWT VC looks in the wrong place, and one written strictly to VCDM never splits
+            the disclosures. Both parse; both are wrong.
+            <br>Issuance and server-side verification both use <code>com.authlete:sd-jwt</code>, which is
+            why the digest semantics are correct even though the metadata does not admit the format exists.
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--done">MEASURED</span>
+          <span class="t-name"><code>statusListIndex</code> is a string</span>
+          <span class="t-note">
+            <code>"statusListIndex": "35"</code>, not <code>35</code>. A reader that accepts only numbers
+            drops the whole <code>credentialStatus</code> object — and a credential with no status entry
+            is a credential that is never checked for revocation. Silent, and in the safe-looking direction.
+          </span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <header>
+      <h2>4. The trust list</h2>
+      <p>Smaller than you would guess, anchored better than you would guess, and labelled in a way you must not show to a user.</p>
+    </header>
+    <div class="ms__body">
+      <ul class="tasks">
+        <li>
+          <span class="chip chip--done">MEASURED</span>
+          <span class="t-name">43 entries in production, and <code>size</code> is not honoured</span>
+          <span class="t-note">
+            <code>GET https://frontend.wallet.gov.tw/api/did?size=20&amp;page=0&amp;orgType=1&amp;status=1</code>
+            <br>20 entries at <code>orgType=1</code>, 23 at <code>orgType=2</code>, 0 at 3 and 4.
+            Enumerated twice at two different page sizes (20 and 5), paging until empty; both give the
+            same totals with no duplicate identifiers.
+            <br>⚠️ <strong>The page size is clamped to 20 but the offset appears to be computed from the
+            requested <code>size</code></strong>, so <code>size=100&amp;page=1</code> returns nothing at
+            all. Page until you get an empty result; do not compute offsets from <code>size</code>.
+            <br><strong>43 entries fit in an app bundle.</strong> That changes what an offline wallet can do.
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--done">MEASURED</span>
+          <span class="t-name">Do not display <code>orgGroupDetail.name</code></span>
+          <span class="t-note">
+            All 43 entries are labelled 「政府部門」 (government department). That set includes
+            FamilyMart, President Chain Store (7-Eleven), Chunghwa Telecom, Taiwan Mobile, Far EasTone
+            and a number of private companies.
+            <br><strong>Any UI that renders this field literally will tell its user that FamilyMart is a
+            government department.</strong> <code>orgType</code> 1/2 appears to be the issuer/verifier
+            distinction instead — the Highway Bureau appears in both, convenience stores only in 2, and
+            convenience stores are the verifier in the telecom-VC parcel-pickup scenario.
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--done">MEASURED</span>
+          <span class="t-name">The on-chain anchor stores the full document, not a hash</span>
+          <span class="t-note">
+            Arbitrum One, contract <code>0x84172caf8dd126c76f1fa8a2733ca3233264d31f</code>. The
+            anchoring transaction for the Ministry of Digital Affairs carries 2,596 bytes of calldata
+            containing <strong>the complete DID string and the complete self-signed DID document JWS in
+            plaintext</strong>. <code>sha256(DID)</code> does not appear.
+            <br>This is stronger than the "carved in stone" framing suggests: the data itself is on
+            chain, so a client could in principle verify the list without trusting
+            <code>frontend.wallet.gov.tw</code>.
+            <br>⚠️ <strong>We have only verified one transaction, and its hash came from the API we
+            would be trying not to trust.</strong> Demonstrating an actually trustless path means
+            enumerating all 43 from the contract address alone. We have not done that.
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--blocked">n=1</span>
+          <span class="t-name">41 of 43 are anchored — the exceptions are worth knowing</span>
+          <span class="t-note">
+            China Medical University appears twice (once under each <code>orgType</code>) with an empty
+            <code>onChainHistory</code>, <code>x509_type: XCA</code>, and — although it is registered
+            under the issuer <code>orgType</code> — <code>issuerMetadataBaseURL: null</code>.
+            <br>⚠️ This is the API's own self-report. We did not search the chain for them, so "not
+            anchored" here means "the API says so", which is circular given what the anchor is for.
+          </span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <header>
+      <h2>5. Revocation has no offline root of trust</h2>
+      <p>The credential path is anchored on a public chain. The revocation path is a URL.</p>
+    </header>
+    <div class="ms__body">
+      <ul class="tasks">
+        <li>
+          <span class="chip chip--done">MEASURED</span>
+          <span class="t-name">The status list is signed by a key that is not in the issuer's DID</span>
+          <span class="t-note">
+            Fetch a status list and verify it two ways:
+            <br>• with the key embedded in its own <code>iss</code> <code>did:key</code> → <strong>fails</strong>
+            <br>• with <code>key-2</code> from the <code>jku</code> URL → <strong>verifies</strong>
+            <br><code>GET https://issuer-vc.wallet.gov.tw/api/keys</code> returns two keys.
+            <code>key-1</code> is the one embedded in the issuer's DID and signs credentials.
+            <code>key-2</code> signs status lists and <strong>appears in no DID document, no trust list
+            entry, and no on-chain record</strong>. The DID document has exactly one verification method.
+            <br>So: <strong>checking whether a TWDIW credential is revoked requires trusting a key
+            distributed only over TLS.</strong> Caching the list does not help — you cannot verify it
+            offline either.
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--done">MEASURED</span>
+          <span class="t-name">Validity is 24 hours from last signing, not from fetch</span>
+          <span class="t-note">
+            <code>nbf</code> → <code>exp</code> is exactly 86,400 seconds. But <code>nbf</code> is
+            <em>when the list was last signed</em>, not when you fetched it.
+            <br><strong>A status list you just downloaded has somewhere between 24 hours and almost no
+            validity left.</strong> Show the <code>exp</code> the list carries; never tell a user
+            "valid for 24 hours".
+            <br>The list itself is cheap: 76 characters compressed, 16,384 bytes decompressed,
+            131,072 bits of capacity, 84 bits set at the time of measurement. Fetching often is viable;
+            the problem is only the offline stretch.
+            <br>⚠️ <strong>n=2</strong> on the re-signing rhythm (we have one 2025 sample re-signed at
+            issuance and one 2026 sample on a daily boundary). Do not build a prefetch schedule on the
+            daily boundary; the conclusion about remaining validity holds regardless, because it needs
+            only that <code>exp</code> is an absolute time.
+          </span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <header>
+      <h2>6. Seven things worth reporting upstream</h2>
+      <p>Ordered by how much a user is harmed, not by technical severity. Numbers 6 and 7 are held back
+      pending better evidence, and are listed here so the reason is visible rather than silent.</p>
+    </header>
+    <div class="ms__body">
+      <ul class="tasks">
+        <li>
+          <span class="chip chip--partial">CODE</span>
+          <span class="t-name">1. Selective disclosure can send fields the user did not select</span>
+          <span class="t-note">
+            The wallet SDK decides which disclosures to keep by <strong>substring-matching the requested
+            field name against the whole decoded JSON array</strong> — which contains the salt and the
+            value as well as the name:
+            <br><code>String decoded = utf8.decode(base64.decode(base64Url)); if (decoded.contains(field)) { … }</code>
+            <br>The driving licence has both <code>id_number</code> and <code>controlnumber</code>, and
+            both contain the substring <code>number</code>. A value containing another field's name
+            matches too; a random salt can match by chance. Separately, a <code>continue</code> sits in
+            the inner loop, so a disclosure matching two requested fields is appended twice.
+            <br><strong>A user who ticks "disclose only A" can send A and B.</strong> This is the core
+            promise of the feature, and it is the one defect on this page whose harm needs no
+            explanation.
+            <br>⚠️ Source-only. No app version recorded, and we did not observe it in traffic.
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--partial">CODE</span>
+          <span class="t-name">2. TLS hostname verification is disabled on four outbound fetches</span>
+          <span class="t-note">
+            Issuer public key, status list, schema, and the frontend DID lookup all pass
+            <code>setAllowedHostnames(null)</code>. In <code>HttpUtils</code> that does not mean "no
+            allowlist, use the system default" — the custom <code>HostnameVerifier</code>
+            <strong>returns <code>true</code> unconditionally</strong>. The binding between the TLS
+            certificate and the hostname is gone on those four connections.
+            <br>RFC 8725 §3.8 requires <code>jku</code> to be restricted to an allowlist of trusted URLs.
+            <br>⚠️ Source-only; this describes the published verifier stack, which each verifying
+            organisation deploys itself. We cannot confirm what any given deployment runs.
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--partial">CODE</span>
+          <span class="t-name">3. Status list and schema are fetched before the issuer signature is verified</span>
+          <span class="t-note">
+            <code>validateVC()</code> launches six steps as concurrent futures; fetching the status list
+            (step 3) and the schema (step 5) start before the issuer's signature is checked (step 6),
+            and both URLs come out of the not-yet-verified payload. Combined with finding 2, anyone who
+            can POST a VP can make the verifier issue a GET to an arbitrary URL.
+            <br>Note also that <code>StatusListCheckTask</code> has <strong>no</strong> DID-first
+            attempt — it goes straight to <code>loadIssuerPublicKey(jku, kid)</code>. This is the one
+            place where the <code>jku</code> pattern is genuinely live in production, and it is
+            self-referential: the list names the key that verifies the list.
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--partial">CODE</span>
+          <span class="t-name">4. <code>client_id</code> carries no information, and two checks are switched off</span>
+          <span class="t-note">See §1. The ID Token signature is never verified; <code>AccessTokenFilter</code>'s validation is commented out.</span>
+        </li>
+        <li>
+          <span class="chip chip--done">MEASURED</span>
+          <span class="t-name">5. <code>format</code> does not describe the credential</span>
+          <span class="t-note">882 of 882. See §3.</span>
+        </li>
+        <li>
+          <span class="chip chip--partial">CODE</span>
+          <span class="t-name">6. The VP object uses <code>context</code>, not <code>@context</code></span>
+          <span class="t-note">
+            All three VP-generating functions in the wallet SDK write <code>'context'</code> without the
+            at-sign. Searching for the VCDM context URL finds only those three, so
+            <strong>no path in the system emits the correct key</strong>.
+            <br>⚠️ <strong>We first described this as "JSON-LD processing silently drops the claims".
+            That was wrong</strong> — the TWDIW verifier does not do JSON-LD expansion, so nothing is
+            being dropped today. The accurate statement is that this is an interoperability defect for
+            any third-party verifier that <em>does</em> expand, not a live data-loss bug. Worth
+            reporting; not worth reporting the way we first wrote it.
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--blocked">n=1</span>
+          <span class="t-name">7. Holder DIDs are not JCS-canonical — held back</span>
+          <span class="t-note">
+            See §2. One sample, second-hand, no app version. We are not filing this until we have
+            several DIDs from a stated build. Listed so that the gap is visible.
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--spike">Design</span>
+          <span class="t-name">And one that is not a defect: issuers cannot rotate keys</span>
+          <span class="t-note">
+            Issuer identity is a <code>did:key</code> — the key <em>is</em> the identity. So rotating a
+            signing key means becoming a different issuer, and every credential already issued has an
+            <code>iss</code> that is no longer in the trust list. A wallet cannot distinguish "this
+            issuer was removed" from "this issuer rotated and the old cards are still genuine".
+            <br><strong>This is the only item here that would make cards already in people's hands
+            collectively unassessable.</strong>
+          </span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <header>
+      <h2>7. What we have not verified</h2>
+      <p>Listed because a page of findings without this section is asking to be over-read.</p>
+    </header>
+    <ul class="tasks">
+      <li><span class="chip chip--blocked">Gap</span><span class="t-name">We have never collected a credential</span><span class="t-note">Everything about issuance is read from source. The one step that requires submitting a form is the one step we have not taken, and it is also the step that would settle whether a non-<code>moda_dw</code> <code>client_id</code> is accepted.</span></li>
+      <li><span class="chip chip--blocked">Gap</span><span class="t-name">Source ≠ deployment</span><span class="t-note">Findings 1–4 and 6 are read from the published repository. We cannot confirm the deployed builds match it.</span></li>
+      <li><span class="chip chip--blocked">Gap</span><span class="t-name">One configuration, one moment</span><span class="t-note">The status-list measurements are a single configuration at a single time. The other 881 have not been sampled.</span></li>
+      <li><span class="chip chip--blocked">Gap</span><span class="t-name">All-string claim values</span><span class="t-note">The driving licence's six fields are all strings. Whether telecom or parcel-pickup credentials carry non-string values is unknown, and it matters: a strict three-element-array reader rejects the <em>whole card</em>, so a real credential would be reported as a broken one.</span></li>
+    </ul>
+  </section>
+
+  <footer>
+    <div>Written while building 「有備而來」, an offline-first Taiwanese ID wallet. Engineering roadmap: <a href="/roadmap/">bonds-tw.github.io/roadmap</a>.</div>
+    <div>Complements <a href="https://docs.denkeni.org/twdiw">TWDIW: The Missing Manual</a> by Denken Chen. Source read: <a href="https://github.com/moda-gov-tw/TWDIW-official-app">moda-gov-tw/TWDIW-official-app</a> (MIT). Corrections welcome — including to this page; it has already corrected itself twice.</div>
+  </footer>
+
+</div>
+</body>
+</html>
