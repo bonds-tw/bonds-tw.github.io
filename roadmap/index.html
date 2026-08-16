@@ -962,19 +962,54 @@
         <div class="ms__rail"><span class="ms__id">M5</span><span class="ms__dot"></span></div>
         <div class="ms__body">
           <div class="ms__head">
-            <h3 class="ms__title">互通：OID4VCI 與 TW-DIW 對齊</h3>
-            <span class="ms__meta">豆泥 · 相依 M1 · 白皮書標為中長期</span>
+            <h3 class="ms__title">第三方皮夾：把台灣數位憑證皮夾（TWDIW）整合進來</h3>
+            <span class="ms__meta">豆泥 · 相依 M1 · 2026-08-16 重新定義範圍</span>
           </div>
-          <p class="ms__goal">讓這個皮夾不是孤島。5.2 把它定位為「未來計劃」，所以排在最後，但資料模型現在就要留好接口。</p>
+          <p class="ms__goal">原本只寫「資料模型留好接口」。<strong>範圍已擴大成真的做一個第三方皮夾</strong>：官方認證的發行者與驗證者都能跑完整流程，皮夾裡除了我們自己的身分證，還有駕照電子卡等官方憑證。目的不是相容性打勾，是<strong>證明最理想的皮夾長什麼樣子</strong>——把三種信任模型並排，讓它們的差異第一次變得可見。完整規劃在 <code>docs/twdiw-integration-plan.md</code>。</p>
           <div class="meter">
-            <div class="meter__bar"><div class="meter__fill" style="width:20%"></div></div>
-            <span class="meter__pct">20%</span>
+            <div class="meter__bar"><div class="meter__fill" style="width:12%"></div></div>
+            <span class="meter__pct">12%</span>
           </div>
           <ul class="tasks">
             <li>
+              <span class="chip chip--done">已完成</span>
+              <span class="t-name">規劃與事實查證（2026-08-16）</span>
+              <span class="t-note">八項事實全部自己量過、可複現。三個決定性的：<br><strong>①「第三方皮夾」在 TWDIW 裡不存在。</strong> 發行端與驗證端都要申請沙盒帳號、自架、做 UAT；<strong>皮夾沒有申請表、沒有註冊、沒有 attestation</strong>。denkeni 手冊裡標題叫「If You're Building a Third-Party Issuer or Verifier Software」的那一節<strong>是空的</strong>，而第三方<em>皮夾</em>連標題都沒有。<br><strong>② <code>client_id</code> 不是名單，是回音。</strong> 證據鏈全在 MIT 授權的官方原始碼裡：發行端自己簽的 ID Token 把 <code>aud</code> 寫死成 <code>"moda_dw"</code>（<code>CredentialService.java:1715</code>）→ OID4VCI handler 從那個 <code>aud</code> 讀出 <code>client_id</code>（<code>CredentialIssuer.java:225</code>）→ <code>/token</code> 拿它比對（<code>:1196</code>）→ proof 的 <code>iss</code> 只跟它比（<code>:1741</code>）。<strong>整條鏈驗的是「你送的字串等於你送的字串」。</strong> 對我們是入場沒有技術門檻；對 TWDIW 是一個要回報的缺口——<strong>憑證與「哪個皮夾拿走它」之間沒有任何綁定</strong>。真正被驗的是金鑰：proof 簽章會用 DID 取出的公鑰驗過，那把公鑰寫進 <code>cnf.jwk</code>。<strong>裝置綁定是真的，皮夾身分是假的。</strong><br><strong>③ 我們現在的 DID 會被官方拒絕。</strong> TWDIW 用 multicodec <code>0xEB51</code>（<code>jwk_jcs-pub</code>，varint <code>D1 D6 03</code>），payload 是整份 JWK 的 JSON；我逐位元組解過兩個真實 DID（129 bytes，前 3 是 D1D603，其餘 126 是 JWK 文字）。官方後端的解法是 <code>did.substring(1)</code> → Base58 → <code>substring(6)</code>「去掉prefix D1D603」——<strong>寫死三個位元組、不檢查 multibase、不檢查 multicodec</strong>。我們的 <code>DIDKey</code> 用 <code>p256-pub</code>（0x1200）產 <code>did:key:zDn…</code>，送過去必然解析失敗。</span>
+            </li>
+            <li>
               <span class="chip chip--todo">待辦</span>
-              <span class="t-name">OID4VCI 簽發流程</span>
-              <span class="t-note">與現有 OpenID 生態接軌，避免日後重複遷移成本。</span>
+              <span class="t-name">M5.1　did:key 第二種拼法＋解析寬容規則</span>
+              <span class="t-note">新增 <code>jwk_jcs-pub</code> 編解碼，與現有 <code>p256-pub</code> <strong>並存</strong>（我們自己那條離線路徑的 DID 不改）。<br><strong>而且官方皮夾自己的 DID 不符合它宣稱的編碼</strong>：<code>jwk_jcs-pub</code> 的定義就是 JWK 經過 JCS（RFC 8785），鍵序必須 <code>crv &lt; kty &lt; x &lt; y</code>。機關 DID 是 <code>crv,kty,x,y</code> ✅；<strong>官方皮夾的 holder DID 是 <code>crv,x,y,kty</code> ❌</strong>。我們的 <code>DIDKey</code> 有一個 <code>nonCanonicalDID</code> 錯誤案例，存在的理由正是拒絕這種東西——<strong>所以嚴格照規範實作的解析器，會拒絕真實世界唯一存在的那個台灣皮夾。</strong><br>由此定一條不對稱規則：<strong>我們自己產生的一律 JCS 正規；解析別人的一律不要求正規。</strong> 正規化是我們對自己的義務，拿它去否決別人只會讓我們無法互通。<br>閘門：用官方那個非正規 holder DID 當測試向量，必須解得開。不碰網路，可離線做完。</span>
+            </li>
+            <li>
+              <span class="chip chip--todo">待辦</span>
+              <span class="t-name">M5.2　OID4VCI 領卡（沙盒）</span>
+              <span class="t-note">五步實測順序：<code>credential-offer-object</code> → <code>.well-known/openid-credential-issuer</code> → <code>/token</code>（pre-authorized_code + tx_code）→ <code>/credential</code>（proof JWT，<code>typ: openid4vci-proof+jwt</code>，<code>aud</code> <strong>結尾有斜線</strong>）→ 抓卡面圖。<code>CredentialStore</code> 本來就是一檔一憑證、有 <code>allIDs()</code>，<strong>結構上已經是多卡的</strong>，不必改。<br>⚠️ <strong><code>client_id</code> 要送什麼是「先量再決定」，不是先決定。</strong> 送 <code>moda_dw</code> 一定會通，但不該長期冒用官方 App 的識別字串。做法是先送 <code>tw.bonds.backupTW</code> 量它會不會被拒：通過就用我們自己的；<strong>被拒的話，那件事本身就是要回報的發現</strong>——TWDIW 沒有辦法讓第三方皮夾正當地表明身分，於是唯一能跑的方式是冒充。<br>前置：沙盒帳號申請的對象是發行／驗證端，<strong>但 demo 站的「訪客領卡」不需要帳號</strong>，可以先不申請就跑通。要不要申請、要不要按同意服務條款，由使用者決定。</span>
+            </li>
+            <li>
+              <span class="chip chip--todo">待辦</span>
+              <span class="t-name">M5.3　SD-JWT VC 讀取與選擇性揭露</span>
+              <span class="t-note">TWDIW 把 <code>_sd</code> 放在 <code>vc.credentialSubject</code> 底下，<strong>不是</strong> SD-JWT VC 標準的頂層 claims（沒有 <code>vct</code>，用 <code>vc.type</code>）——是 VCDM 1.1 與 SD-JWT 的混血。我們的 <code>SelectiveDisclosure</code> 已經是同一套加鹽承諾機制，<strong>接得上，但要另寫 adapter，不要把我們的格式改成它的</strong>。<br>閘門：駕照電子卡六個揭露（<code>name</code>／<code>id_number</code>／<code>roc_birthday</code>／<code>type</code>／<code>controlnumber</code>／<code>gDate</code>）全部解得開，且既有三條紅線測試要覆蓋 TWDIW 格式——尤其<strong>拒收未被承諾的揭露</strong>。</span>
+            </li>
+            <li>
+              <span class="chip chip--todo">待辦</span>
+              <span class="t-name">M5.4　OID4VP 出示</span>
+              <span class="t-note"><code>POST /api/oidvp/authorization-response</code>，帶 <code>state</code>／<code>vp_token</code>／<code>presentation_submission</code>。vp_token 的 <code>aud</code> 形狀是 <code>redirect_uri:https://…</code>（前面真的有那個字首）。<br>⚠️ <strong>官方的 vp_token 裡是 <code>"vp":{"context":[…]}</code>——沒有 <code>@</code></strong>（我從真實 vp_token 的 base64 解出來確認過）。JSON-LD 處理會把整個 VP 的主張丟掉而簽章照樣驗得過，<strong>正是 M1 咬過我們那個 bug 的同一個家族</strong>。要不要複製這個錯字？<strong>要</strong>——出示要被官方驗證端收下就得照它實際吃的格式；但必須在程式碼註明哪一天、為什麼、上游修好後拿掉。一個沒有註解的相容性 hack，三個月後會被當成我們自己的 bug 修掉。</span>
+            </li>
+            <li>
+              <span class="chip chip--todo">待辦</span>
+              <span class="t-name">M5.5　三種卡並排與能力對照</span>
+              <span class="t-note"><strong>這一項才是整個 M5 的論點。</strong> 「最理想的皮夾」的區別不是裝得下很多張卡——官方 App 也裝得下——而是<strong>它把每一張卡證明得了什麼、證明不了什麼，寫在卡的旁邊</strong>。<br>我們有硬證據說明為什麼非做不可：<strong>官方那一套分不出 IAL。</strong> denkeni 自己問「是不是用 <code>kid: key-1</code> 標示 IAL？」自己回答「nope」；實測 IAL-1（自己在網頁填的 email）與 IAL-3 的 VC <strong>結構上一模一樣</strong>——同一個 <code>jku</code>、同一個 <code>kid</code>、同一個發行者 DID。<strong>皮夾看不出「櫃檯驗過證件」與「使用者打字」的差別。</strong> 加上撤銷是每天過期的線上清單（實測 <code>nbf</code>→<code>exp</code> 正好 86,400 秒）——<strong>離線超過 24 小時，TWDIW 憑證的撤銷狀態不可知</strong>。<br>要新增兩條既有 caveat 型別沒涵蓋的：「這張卡看不出身分確信度」與「離線超過 24 小時撤銷狀態不可知」。⚠️ <code>LocalizationCoverageTests</code> 目前<strong>不涵蓋 <code>PresentationScenario</code></strong>（UX 盤點 b-1 的同一個洞），新增之前要先補覆蓋，否則新的英文字串會照樣全綠。</span>
+            </li>
+            <li>
+              <span class="chip chip--spike">研究</span>
+              <span class="t-name">兩張卡的事實剛好相反，而這是產品的核心對比</span>
+              <span class="t-note">官方駕照電子卡實測帶 <code>id_number</code>（可選擇性揭露）。對照我們自己量過的：<strong>自然人憑證的 Subject DN 裡沒有統一編號</strong>（只有 C／CN／serialNumber 16 位數字）。所以我們那條路<strong>扣不住姓名，也拿不到號碼</strong>；TWDIW 兩個都有。<br>皮夾裡會同時放著兩種相反的卡：我們的<em>離線可驗但無法不可連結</em>，官方的<em>欄位齊全但要信任發行者且離線一天後撤銷不可知</em>。<strong>並排本身就是論證</strong>，統一格式會殺掉論證——所以<strong>明確不做</strong>「把自發行憑證改成 TWDIW 格式」。<br>資料風險隨之而來：把官方駕照放進來，等於把一個我們自己刻意拿不到的識別碼帶進裝置。<code>LocalDataEraser</code> 必須一體涵蓋，出示預設全關對 TWDIW 卡一樣成立，而且卡片說明要直說「這張卡裡有你的身分證字號」。</span>
+            </li>
+            <li>
+              <span class="chip chip--spike">研究</span>
+              <span class="t-name">政策風險：現在不需要許可，不表示以後不會</span>
+              <span class="t-note">TWDIW 目前沒有辦法分辨皮夾，但歐盟 ARF 走的是 wallet attestation。若 TWDIW 補上，第三方皮夾會在一夜之間從「不需要許可」變成「需要許可」。<strong>所以排程上要早做</strong>，而且「我們用了什麼身分字串」要集中在一處，方便將來換。<br>順帶：這件整合會產出<strong>四份可以回報上游的發現</strong>——<code>client_id</code> 不具鑑別力、官方皮夾的 did:key 不符 JCS、issuer metadata 的 <code>format</code> 與實際回傳不符（宣稱 <code>jwt_vc_json</code>、實際是 <code>vc+sd-jwt</code> 加 <code>~</code> 揭露串，照 <code>format</code> 解析的客戶端永遠看不到揭露）、VP 用 <code>context</code> 而非 <code>@context</code>。後兩者都屬於「簽章驗得過、語意卻是錯的」，<strong>最難被自己的測試抓到</strong>。</span>
             </li>
             <li>
               <span class="chip chip--partial">半完成</span>
@@ -982,9 +1017,9 @@
               <span class="t-note">選擇性揭露的底層機制完成（SD-JWT 式加鹽承諾）。這曾是「滿 18 歲」真正的擋路點——不是電路，是資料模型：當時出示會交出<strong>整個</strong> <code>credentialSubject</code>，等於為了證明年齡而連身分證字號與戶籍地址一起給出去。那一點已經解掉了。<br>三個安全性質都以突變反向確認過會轉紅：<strong>每條揭露各加 128 bits 鹽</strong>（否則 <code>nationality</code> 十來種、<code>birthdate</code> 約四萬種可能值都能枚舉還原）、<strong>承諾摘要排序</strong>（否則位置洩漏哪個摘要對應哪個欄位）、<strong>拒收未被承諾的揭露</strong>（否則持證方能宣稱任何事）。已接進出示流程與 UI：出示前每個欄位一個開關、<strong>預設全部關閉</strong>，按鈕寫「出示 N 個欄位」，查驗方會看到「另外保留了 N 個欄位」。<code>credentialSubject</code> 現在只剩 <code>id</code>，其餘全進 <code>_sd</code>——留在明文裡的欄位就是持有人永遠無法扣住的欄位。<br><strong>但有一個欄位扣不住，而畫面一度承諾扣得住</strong>：姓名寫在替憑證簽章的 X.509 憑證的 Subject CN 裡，而查驗方需要那張憑證才能驗簽。X.509 沒有選擇性揭露，所以這是結構性的。該開關已經拿掉，改成一行「一定會被看到」的說明。還沒對齊 OID4VP 的線上格式。</span>
             </li>
             <li>
-              <span class="chip chip--todo">待辦</span>
+              <span class="chip chip--done">已完成</span>
               <span class="t-name">TW-DIW 相容性評估</span>
-              <span class="t-note">若官方走 SD-JWT，需同步建立去連結化路徑，否則授權後的資料包會變成新的蜜罐。</span>
+              <span class="t-note">2026-08-16 做完，結論被上面的 M5.1–M5.5 取代。原本寫的是「若官方走 SD-JWT，需同步建立去連結化路徑，否則授權後的資料包會變成新的蜜罐」——<strong>官方確實走 SD-JWT，而那個顧慮的形狀跟預期不同</strong>：蜜罐不在「授權後的資料包」，在<strong>憑證本身</strong>（駕照電子卡直接帶 <code>id_number</code>），而且它是<em>選擇性揭露</em>的，所以出示時扣得住、儲存時扣不住。去連結化路徑對這一點沒有幫助，能幫上忙的是儲存與抹除的一體涵蓋，以及卡片上直說裡面有什麼。<br><strong>明確不做的四件事</strong>也在這次定案：不做第三方發行端／驗證端（要自架、要 UAT，我們的價值不在那裡）；不把自發行憑證改成 TWDIW 格式（會把離線保證稀釋成它的等級，並殺掉並排的論點）；不把 TWDIW 信任清單當成我們的 <code>TrustList</code>（它是 HTTPS API 加 Arbitrum 錨點 <code>0x84172caf…</code>，跟我們的離線承諾模型是兩件事）；不做 ZK 與 TWDIW 的接合（會產生一個看起來像零知識、實際上要信任發行者的東西，<strong>比不做更糟</strong>）。</span>
             </li>
           </ul>
         </div>
