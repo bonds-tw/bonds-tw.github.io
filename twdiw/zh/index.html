@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>數位憑證皮夾實作筆記 — 文件沒寫、撞到才知道的那些</title>
-<meta name="description" content="做第三方數位憑證皮夾時撞到的牆：文件與實際部署的差別、規範偏差、量到的數字，以及七件要回報上游的缺陷。每一條都標了證據等級。">
+<meta name="description" content="做第三方數位憑證皮夾時撞到的牆：文件與實際部署的差別、規範偏差、量到的數字，以及八件要回報上游的缺陷。每一條都標了證據等級。">
 <meta property="og:title" content="數位憑證皮夾實作筆記">
 <meta property="og:description" content="做第三方數位憑證皮夾時撞到的牆——文件沒寫、而且不知道就一定會做錯的那些。">
 <meta property="og:type" content="article">
@@ -1007,7 +1007,55 @@ EOF</code></pre>
   </section>
   <section class="section">
     <header>
-      <h2>七、七件值得回報上游的事</h2>
+      <h2>七、皮夾裡的卡，離線時沒有名字</h2>
+      <p>把卡片列做出來、render 出來、看了一眼才發現的。那一列長這樣：
+      <code>00000000_demo_drivinglicense_202504251418</code>。</p>
+    </header>
+    <div class="ms__body">
+      <ul class="tasks">
+        <li>
+          <span class="chip chip--done">實測</span>
+          <span class="t-name">憑證裡唯一能拿來稱呼它的欄位是一個機器識別碼</span>
+          <span class="t-note">
+            <code>vc.type[1]</code> 是皮夾唯一叫得出它名字的欄位，而它是發行系統的內部識別碼：
+            四十一個字元，在 390pt 寬的螢幕上折成兩行。人看得懂的名稱在發行者 metadata 的
+            <code>credential_configurations_supported[…].display[].name</code>——
+            那是一個 <strong>HTTPS 端點</strong>（實測 701 KB、882 組設定）。
+            <br>所以<strong>一個離線的皮夾，無法告訴持有人他手上這張卡叫什麼。</strong>
+            站在櫃檯前，他看到的是一串底線和數字，要自己認出哪一張是駕照。
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--done">實測</span>
+          <span class="t-name">而且沒有任何簽章覆蓋那個名稱，所以快取解決不了</span>
+          <span class="t-note">
+            這跟撤銷不一樣。撤銷至少還有一個講得清楚的降級（「離線超過 24 小時就不可知」）。
+            名稱抓一次快取起來，那份快取<strong>不是憑證的一部分</strong>——沒有東西簽它——
+            所以顯示快取標籤的皮夾，顯示的是它自己的筆記，不是發行者的宣稱。
+            離線要拿到一個可信的卡片名稱，這條路根本不存在。
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--partial">程式碼</span>
+          <span class="t-name">我們怎麼處理，以及刻意不做什麼</span>
+          <span class="t-note">
+            <code>CardInventory.readableType</code> 拿掉兩段對持有人毫無意義的東西——
+            開頭全是數字的發行者代碼，結尾 8–14 位數字的核發時間戳——其餘原樣輸出。
+            上面那一列因此變成 <code>demo_drivinglicense</code>。
+            <br><strong>刻意不做對照表。</strong>一張「已知型別→中文名稱」的表，
+            對表上沒有的型別就是一個猜測，而沒在表上的型別正是猜錯最要命的地方。
+            兩端的裁切都是條件式的，裁完會變空字串就原樣輸出。
+            <br>這改善了可讀性，<strong>但沒有解決問題</strong>：<code>demo_drivinglicense</code>
+            依然是發行系統的字，不是持有人的話。真正的解法在發行端，所以它是下面的第 8 件。
+          </span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <header>
+      <h2>八、八件值得回報上游的事</h2>
       <p>依使用者受害程度排，不是依技術嚴重度。第 6、7 件因為證據不足而暫緩，
       列在這裡是為了讓暫緩的理由看得見，而不是默默不提。</p>
     </header>
@@ -1087,6 +1135,19 @@ EOF</code></pre>
           </span>
         </li>
         <li>
+          <span class="chip chip--done">實測</span>
+          <span class="t-name">八、憑證沒有攜帶任何離線可讀的名稱</span>
+          <span class="t-note">
+            見第七節。<code>vc.type[1]</code> 是內部識別碼；人類可讀名稱只存在於線上 metadata，
+            而且不在任何簽章的覆蓋範圍內。
+            <br><strong>建議的修法：</strong>把 display name 放進 VC 本身——例如
+            <code>vc.name</code>，或 SD-JWT VC 的 <code>vct</code> 搭配一份有簽章覆蓋的型別
+            metadata——讓離線皮夾能顯示持有人認得的名稱。
+            <br>受害程度排序上它不高，沒有人因此被冒用。但它是這張清單上唯一
+            <strong>每一位持有人、每一次打開皮夾都會遇到</strong>的，而其他多半不會。
+          </span>
+        </li>
+        <li>
           <span class="chip chip--spike">設計</span>
           <span class="t-name">還有一件不算缺陷的：發行者換不了金鑰</span>
           <span class="t-note">
@@ -1103,7 +1164,7 @@ EOF</code></pre>
 
   <section class="section">
     <header>
-      <h2>八、我們沒有驗證過什麼</h2>
+      <h2>九、我們沒有驗證過什麼</h2>
       <p>列出來是因為一頁只有發現而沒有這一節，等於在邀請別人過度解讀。</p>
     </header>
     <ul class="tasks">

@@ -643,7 +643,7 @@ pre.tokens code { white-space: pre-wrap; word-break: break-all; }
     </p>
     <p>
       <strong>中文摘要：</strong>這一頁是做第三方皮夾時撞到的牆——文件與實際部署的差別、規範偏差、
-      量到的數字，以及七件要回報上游的缺陷。每一條都標了證據等級，因為其中幾條是要送到
+      量到的數字，以及八件要回報上游的缺陷。每一條都標了證據等級，因為其中幾條是要送到
       數發部手上的，而一條經不起「你們實測過嗎」的主張會連累其他站得住的。
     </p>
   </section>
@@ -1036,7 +1036,60 @@ EOF</code></pre>
   </section>
   <section class="section">
     <header>
-      <h2>7. Seven things worth reporting upstream</h2>
+      <h2>7. A card in a wallet has no name it can show offline</h2>
+      <p>Found by building the card list, rendering it, and looking at it. The row read
+      <code>00000000_demo_drivinglicense_202504251418</code>.</p>
+    </header>
+    <div class="ms__body">
+      <ul class="tasks">
+        <li>
+          <span class="chip chip--done">MEASURED</span>
+          <span class="t-name">The only name inside the credential is a machine identifier</span>
+          <span class="t-note">
+            <code>vc.type[1]</code> is the sole field a wallet can call the card by, and it is an
+            issuing-system identifier: forty-one characters, wrapping over two lines on a 390pt screen.
+            The human-readable name lives in the issuer's metadata, at
+            <code>credential_configurations_supported[…].display[].name</code> — <strong>an HTTPS
+            endpoint</strong> (measured: 701 KB, 882 configurations).
+            <br>So <strong>an offline wallet cannot tell its holder what the card in front of them is
+            called.</strong> Standing at a counter, they read a string of underscores and digits and
+            work out for themselves which one is the driving licence.
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--done">MEASURED</span>
+          <span class="t-name">And no signature covers that name, so caching does not fix it</span>
+          <span class="t-note">
+            This differs from revocation, which at least degrades in a way that can be stated
+            ("unknown after 24 hours offline"). A name fetched once and cached is not part of the
+            credential — nothing signs it — so a wallet that displays a cached label is displaying its
+            own note, not the issuer's assertion. There is no offline path to a trustworthy card name at
+            all.
+          </span>
+        </li>
+        <li>
+          <span class="chip chip--partial">CODE</span>
+          <span class="t-name">What we do about it, and what we refuse to do</span>
+          <span class="t-note">
+            <code>CardInventory.readableType</code> drops the two segments that are meaningless to a
+            holder — a leading all-digit issuer code and a trailing 8–14 digit issuance timestamp — and
+            shows the rest. The row above becomes <code>demo_drivinglicense</code>.
+            <br><strong>Deliberately no lookup table.</strong> A table of known types is a guess about
+            every type it does not contain, and the types it does not contain are exactly where a wrong
+            guess would matter. Both edits are conditional on the shape being present, and the original
+            string is returned whenever stripping would leave nothing.
+            <br>This improves legibility and <strong>does not solve the problem</strong>:
+            <code>demo_drivinglicense</code> is still the issuing system's word, not the holder's. The
+            fix belongs at the issuer, which is why it is item 8 below.
+          </span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <header>
+      <h2>8. Eight things worth reporting upstream</h2>
       <p>Ordered by how much a user is harmed, not by technical severity. Numbers 6 and 7 are held back
       pending better evidence, and are listed here so the reason is visible rather than silent.</p>
     </header>
@@ -1121,6 +1174,20 @@ EOF</code></pre>
           </span>
         </li>
         <li>
+          <span class="chip chip--done">MEASURED</span>
+          <span class="t-name">8. The credential carries no offline-readable name</span>
+          <span class="t-note">
+            See §7. <code>vc.type[1]</code> is an internal identifier; the display name exists only in
+            online metadata and is not covered by any signature.
+            <br><strong>Suggested fix:</strong> carry the display name in the VC itself — a
+            <code>vc.name</code>, or SD-JWT VC's <code>vct</code> together with signed type metadata —
+            so that an offline wallet can show a name its holder recognises.
+            <br>Low on the harm ordering: nobody is impersonated by it. But it is the one item on this
+            list that <strong>every holder meets every time they open the wallet</strong>, which most of
+            the others do not.
+          </span>
+        </li>
+        <li>
           <span class="chip chip--spike">Design</span>
           <span class="t-name">And one that is not a defect: issuers cannot rotate keys</span>
           <span class="t-note">
@@ -1138,7 +1205,7 @@ EOF</code></pre>
 
   <section class="section">
     <header>
-      <h2>8. What we have not verified</h2>
+      <h2>9. What we have not verified</h2>
       <p>Listed because a page of findings without this section is asking to be over-read.</p>
     </header>
     <ul class="tasks">
