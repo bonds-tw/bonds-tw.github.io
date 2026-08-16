@@ -1030,6 +1030,75 @@
 
   <section class="section">
     <header>
+      <h2>介面與可讀性</h2>
+      <p>2026-08-13 的全面盤點。五個視角平行跑（櫃檯那二十秒／無障礙／第一次打開／失敗與拒絕／中文文案），原始 42 條，合併後 <strong>40 條、9 組同根因</strong>。排序判準刻意不是 S/M/L，是：<strong>(a) 會不會讓人在櫃檯前做錯判定 → (b) 會不會讓但書讀不到 → (c) 會不會讓真的需要它的人用不下去 → (d) 其他</strong>。完整清單在 <code>docs/ux-audit-2026-08-13.md</code>。</p>
+    </header>
+
+    <div class="ms__body" style="margin-bottom:28px">
+      <p class="ms__goal"><strong>最要緊的三條是同一個故事</strong>，2026-08-16 一起修完：a-2 讓誠實的人被拒絕，b-4 讓緩解的句子幾乎看不見，a-3 讓其中一種情況連那句都沒有。</p>
+      <ul class="tasks">
+        <li>
+          <span class="chip chip--done">已修</span>
+          <span class="t-name">a-2　從掃描器返回，會指控誠實的人在重播</span>
+          <span class="t-note"><code>viewWillAppear</code> 無條件換掉挑戰，而 <code>viewWillDisappear</code> <strong>刻意不取消</strong>（註解自己寫了理由：推出掃描器不該取消那個掃描器正要收答案的挑戰）。所以畫面<strong>離開時保住挑戰、回來時把它換掉</strong>。按返回、相機權限被拒、任何一趟來回，對方那份誠實的出示就變成 <code>challengeMismatch</code>——而那個失敗在畫面上寫的是「可能是先前出示的複本」。<strong>把該通過的判成不通過，而且承擔形式是一句指控。</strong> 兩個視角獨立撞到同一個地方，是全部 40 條裡證據最強的一條。<br>修法：兩半的判斷抽成 <code>VerifierScreenLifecycle</code>，比照持證方那邊的 <code>PresentationScreenLifecycle</code>。單看任何一半都合理，bug 在它們的分歧裡，所以測試有一條專門釘住「departure 保住的東西，arrival 不可以丟掉」。單一使用規則沒變——真的離開仍然取消。</span>
+        </li>
+        <li>
+          <span class="chip chip--done">已修</span>
+          <span class="t-name">b-4　唯一保護誠實使用者的那句話，是全畫面最淡的字</span>
+          <span class="t-note"><code>PresentationUI.footnote</code> 用 <code>.tertiaryLabel</code>，實測<strong>淺色 1.70:1、深色 2.23:1，兩個模式任何字級都不過 AA</strong>。用它畫的包括「查驗方一定會看到你的姓名」「這段文字是查驗者自己填的」——<strong>以及「『未通過』不等於偽造。裝置時間不準、條碼沒掃完、App 版本太舊，都會得到同樣的結果」</strong>。<br>修法：<code>footnote</code> 改 <code>.secondaryLabel</code>（26% → 60% 墨水），另加 <code>PresentationUI.mitigation</code>：body 字級、全墨，給那句專用。跟持證方那句輪播秒數當初搬出 footnote 是同一個理由——<strong>寫給剛在別人面前看到紅畫面、只有幾秒可以說話的人看的句子，不該是全畫面最淡的字。</strong></span>
+        </li>
+        <li>
+          <span class="chip chip--done">已修</span>
+          <span class="t-name">a-3　<code>noPendingRequest</code> 穿一樣的紅底，卻是唯一沒有那句緩解的</span>
+          <span class="t-note">這個分支<strong>什麼都沒有檢查過</strong>，它說的完全不是對方出示了什麼，卻穿著跟真正拒絕一模一樣的紅底與「查驗未通過」，而且是唯一少了那句 footnote 的——讀者拿到指控卻拿不到但書。<br>修法：改成橙色的「沒有東西被查驗」並補上緩解句（「這是這台手機的狀態，不是對出示者的判斷」）。規則同能力頁的 <code>.partial</code>：<strong>不是壞狀態的狀態，不可以畫成壞狀態。</strong> 兩張結果畫面 render 成 PNG 逐一看過，現在一紅一橙、不再是同一張臉。</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="ms__body">
+      <p class="ms__goal">其餘 37 條尚未動工。以下是還沒修、但值得單獨提的幾條。</p>
+      <ul class="tasks">
+        <li>
+          <span class="chip chip--todo">待辦</span>
+          <span class="t-name">b-1　能力頁的三個問句與那段「它實際上證明了什麼」，全文是英文</span>
+          <span class="t-note"><code>LocalizationCoverageTests</code> 涵蓋三種 caveat 型別，<strong>就是沒涵蓋 <code>PresentationScenario</code></strong>，所以全綠。<strong>那一頁存在的唯一理由是不讓 partial 被讀成 supported，而那句話對它要服務的讀者不可讀。</strong> 這個洞也擋著 M5.5——新增 TWDIW 的兩條 caveat 之前要先補覆蓋，否則新的英文字串會照樣全綠。</span>
+        </li>
+        <li>
+          <span class="chip chip--todo">待辦</span>
+          <span class="t-name">c-3　查驗方斷線後，出示端永遠停在「傳送… 47%」</span>
+          <span class="t-note"><code>BluetoothLinkPeripheral</code> 缺 <code>didUnsubscribeFrom</code>。這是「有沒有哪個失敗完全沒有畫面」的正解，而且落在最容易被中斷的那條路上。跟先前修掉的 ack 競態是同一個家族。</span>
+        </li>
+        <li>
+          <span class="chip chip--todo">待辦</span>
+          <span class="t-name">a-5　App 自己簽發的欄位，穿著「不可信第三方」的衣服</span>
+          <span class="t-note"><code>ClaimLabel</code> 只認得五個 key，沒有 <code>AgePredicate.claimName</code>，所以「滿 18 歲」落到 <code>.declaredByTheDocument</code>，被穿上那套<strong>專門為了擋 <code>zzz_official</code> 才建立的引號樣式</strong>，值還顯示成 <code>true</code>。稀釋那個訊號——里長下次看到真正可疑的欄位會覺得「App 常常這樣」。而它正好是能力頁拿來當招牌的第一個場景。</span>
+        </li>
+        <li>
+          <span class="chip chip--todo">待辦</span>
+          <span class="t-name">b-3　但書是灰的，次要記帳說明是黑的</span>
+          <span class="t-note">「這次查驗沒有確認的事」那整塊每條訊息是 <code>.secondaryLabel</code>（實測淺色 <strong>3.44:1，一般文字不過 AA</strong>），而「對方另外保留了 2 個欄位」那顆藥丸是 <code>.label</code>（21:1）。<strong>位置守住了，同一塊內部的視覺重量沒守住，而且順序是反的。</strong> 只在淺色模式壞——而白天在櫃檯正是淺色。一行可改。</span>
+        </li>
+        <li>
+          <span class="chip chip--todo">待辦</span>
+          <span class="t-name">a-1　綠勾說「這台裝置」，但讀那句話的人手上也有一支</span>
+          <span class="t-note">判定行寫「持有<strong>這台裝置</strong>的人簽署了本次查驗」，而同一頁其他地方都把那支手機叫「對方手機」。<strong>只有唯一那行綠字用了會指向讀者自己的指示代名詞</strong>，而且落在螢幕上最大、最可能被讀完就停的一行——方向是往高估。</span>
+        </li>
+        <li>
+          <span class="chip chip--todo">待辦</span>
+          <span class="t-name">a-6　時鐘對不上時，指控對方</span>
+          <span class="t-note">訊息說「對方裝置的時間誤差太大」，但判斷用的是兩邊各自的時鐘讀數——<strong>查驗方自己慢三分鐘會得到一模一樣的句子</strong>。同一個 App 的鏡像情形（持證端）說的是「兩支裝置其中一支的時間不準」。避開了偽造的指控，換上另一個一樣沒有根據的指控，而被指的人無法反駁。</span>
+        </li>
+        <li>
+          <span class="chip chip--spike">研究</span>
+          <span class="t-name">報告裡有一節叫「明確不建議做的」</span>
+          <span class="t-note">存在的理由是：<strong>UI/UX 建議天然傾向「讓不好看的東西不礙眼」</strong>，而這個 App 的價值恰好在那些不好看的東西——攤開的 caveat、不能藏的姓名、說得出口的失敗。所以盤點自己要先列一節防這件事，跟 TWDIW 規劃裡那節「明確不做的」是同一個手法。</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <header>
       <h2>現有資產盤點</h2>
       <p>三個 iOS 專案、一個網站、一整套上游 ZK 元件。哪些接手、哪些當素材、哪些直接用。</p>
     </header>
