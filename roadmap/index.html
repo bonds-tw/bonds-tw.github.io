@@ -1251,6 +1251,93 @@
     </div>
   </section>
 
+  <section class="section">
+    <header>
+      <h2>連儂牆</h2>
+      <p>bonds.tw 上的一面公開牆，用零知識證明簽名——證明你手上有一張真的自然人憑證，而不交出姓名或身分證字號。
+      <strong>目前還沒上線，而且是刻意的。</strong>Worker 裡那個會發徽章的函式沒有接路由，
+      因為一個徽章一旦發出去就收不回來。</p>
+    </header>
+    <div class="ms__body">
+      <ul class="tasks">
+        <li>
+          <span class="chip chip--done">完成</span>
+          <span class="t-name">位址定案：<code>bonds.tw/api/wall</code></span>
+          <span class="t-note">原本要用 <code>wall.bonds.tw</code>。授權下來之後才發現<strong>權限本身把答案決定了</strong>——
+          token 只有 <code>zone:read</code>，建不了 DNS 記錄。而路徑其實更好，理由跟 DNS 無關：
+          <strong>這個字串會被編進一個要送到手機上的二進位檔</strong>，而另一個選項是某個人帳號的
+          <code>workers.dev</code> 子網域——帳號改名，每一份已安裝的 App 就永久失去這面牆，
+          沒有辦法推修正給一支不更新的手機。
+          <br>⚠️ <strong>第一次部署把 live wall 弄掛了約三分鐘。</strong>加 <code>routes</code>
+          會把 workers.dev 子網域預設關掉，而網站前端正寫死指向它。實測，不是推論。
+          教訓：<code>wrangler deploy</code> 會依 config <em>重設觸發器</em>，不只是上傳程式碼。</span>
+        </li>
+        <li>
+          <span class="chip chip--done">完成</span>
+          <span class="t-name">驗證器裡的一個安全洞：<code>IssuerCert: nil</code> 不是「用預設值」</span>
+          <span class="t-note"><code>linkverify.Verify</code> 是 <code>if v.IssuerCert != nil</code>——
+          nil 會把發行者檢查<strong>整段跳過</strong>。一份對著偽造 MOICA 產生的證明，
+          會滿足這個 binary 還在跑的每一項檢查：SNARK 驗得過（它證明的是「一條簽章鏈」，不是<em>誰的</em>），
+          app_id 對得上，challenge 對得上。<strong>把證明綁到真正的內政部身上的，就只有這一個比對。</strong>
+          而 <code>/healthz</code> 同時對外宣稱它檢查了 issuer_modulus。
+          <br>修法是「沒有它就不准啟動」，而健康端點的清單改成<strong>從實際跑著的 verifier 推導</strong>——
+          一個回報「開發者本來打算跑哪些檢查」的端點比沒有更糟，它正是審查者會拿來代替讀程式碼的東西。
+          <br>同一批還修掉：<code>go.mod</code> 根本不存在（image 從來就建不起來）、
+          啟動檢查量 rune 而比對用 byte、發號碼不看 kill switch、
+          以及花費閘門數的是「成功」而唯一寫入成功的那行在拒絕之後——
+          <strong>一面系統性拒絕的牆會每次請求都計費一個 2 GiB 容器，而閘門整天讀到零。</strong></span>
+        </li>
+        <li>
+          <span class="chip chip--done">完成</span>
+          <span class="t-name">App 端：除了畫面以外都做完了（1,191 測試綠）</span>
+          <span class="t-note">位址、challenge 型別、提交型別、錯誤分類、簽署順序、揭露清單、邊界測試。
+          <br>順序裡有一個決定比其他都重要：<strong>950 MB 的證明素材必須在「任何時鐘出現之前」準備好</strong>。
+          下載可能跑一小時，challenge 活三十分鐘——先拿號碼就等於保證一個網路慢的人眼睜睜看著它過期，
+          然後用<em>另一次身分證統一編號揭露</em>去換下一個。
+          <br>提交型別只有一個建構子而且它吃 <code>ZKProofBundle</code>：持卡人的 X.509 Subject CN 裡有法定姓名，
+          而這個 App 手上還有好幾個會很樂意序列化進 request body 的物件。
+          <strong>讓它編不過去，比讓它被審查過更強。</strong></span>
+        </li>
+        <li>
+          <span class="chip chip--done">完成</span>
+          <span class="t-name">對抗式審查：七個錯，其中一個同時實現兩個最壞代價</span>
+          <span class="t-note">派了一個 agent 去攻擊「submit 怎麼結束 → 要不要告訴使用者可以再簽」那張分類表，
+          逐行追 Worker 的控制流。最嚴重的一條：<code>challenge-used</code> 在<em>重試</em>時
+          原本會說「什麼都沒公開」——而那正是「你的簽名很可能已經在牆上」最強的證據，
+          因為花掉那個號碼的就是這個 session 自己那次結束得不明不白的送出。
+          後果是使用者重跑完整流程：<strong>牆上多一筆重複，加上再一次把身分證統一編號送給內政部</strong>。
+          <br>另外六條包括：<code>{verified:true}</code> 沒帶數字被讀成 0（會在人剛簽完時顯示一面空牆）、
+          今天真正會發生的 JSON 404 被歸到「可能重複了」、
+          以及我把「有沒有公開」的判斷留在錯誤上——<strong>那正是我上一個 commit 說要修掉的那個 bug</strong>。</span>
+        </li>
+        <li>
+          <span class="chip chip--partial">半完成</span>
+          <span class="t-name">分鐘時間戳：保留，並且升格成「立場」</span>
+          <span class="t-note">做證明會告訴內政部「這個身分證字號在什麼時候為這支 App 要過簽章」，
+          而牆會公開每一筆簽名發生在哪一分鐘，端點不需要驗證。兩者之間的間隔被設計本身綁住，
+          而每日上限 200 筆代表任何十一分鐘窗內約 1.5 筆——
+          <strong>對大多數簽名者來說，發卡機關可以從一個公開頁面把人指出來。</strong>
+          設計文件 §1 的威脅模型假設攻擊者需要 nullifier；<strong>內政部不需要。</strong>
+          <br>App 端修不掉，唯一的緩解在伺服器端（時間粗到小時、或隨機延後公開）。
+          拍板保留，所以它從「沒被檢查的預設」變成「立場」——而立場要寫在它影響的人看得到的地方，
+          也就是按鈕旁邊，不是設計文件裡。牆上現在明講「到分鐘為止，寫進去的時候就截掉」，
+          並加一句說清楚殘留風險。中英兩版同步。</span>
+        </li>
+        <li>
+          <span class="chip chip--blocked">擋住</span>
+          <span class="t-name">上線：等驗證服務真的建起來</span>
+          <span class="t-note">驗證要跑 Go 與 Rust FFI，Worker 不是能跑 Go 的地方，所以要一個容器。
+          Dockerfile 四階段建好了（自我測試有反向對照、runtime 不裝 <code>ca-certificates</code>），
+          但 image 還沒建、還沒部署——那會動到雲端帳單，而且二十條上線檢查清單的第 20 條說：
+          <strong>在其他全部成立之前，Worker 裡一行寫得出徽章的程式碼都不存在。</strong>
+          <br>App 端的畫面也刻意留最後：Release build 的簽章工廠回 <code>nil</code>，根本產不出證明。
+          做一個按下去說「這個版本做不到」的灰色列，就是這個網站上那個 <code>href="#"</code> 的手機版——
+          <strong>一個永遠兌現不了的邀請。</strong></span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
   <footer>
     <div>本頁狀態為 2026-08-10 的實地盤點結果，隨施工進度更新。全部里程碑負責人：豆泥。</div>
     <div>相關頁面：<a href="/twdiw/">TWDIW Field Notes</a>——做第三方皮夾時撞到的牆，補強 denkeni 那份 Missing Manual 空著的那一節（英文）。</div>
