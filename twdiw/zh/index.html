@@ -142,6 +142,14 @@
     border-radius: 2px;
   }
 
+  .skip-link {
+    position: fixed; top: 0.75rem; left: 0.75rem; z-index: 10;
+    transform: translateY(-200%);
+    padding: 0.65rem 0.9rem;
+    background: var(--ink); color: var(--ground); border-radius: 3px;
+  }
+  .skip-link:focus { transform: translateY(0); }
+
   /* ---------- masthead ---------- */
 
   .masthead { display: flex; flex-direction: column; gap: 1.25rem; }
@@ -190,6 +198,23 @@
     font-size: var(--step--1);
     letter-spacing: 0.04em;
   }
+
+  .project-status {
+    border: 1px solid var(--line); border-left: 4px solid var(--accent);
+    border-radius: 3px; background: var(--surface); padding: 1.25rem 1.4rem;
+    display: flex; flex-direction: column; gap: 1rem;
+  }
+  .project-status h2 { margin: 0; font-family: var(--display); font-size: var(--step-2); }
+  .project-status h2 small { font-family: var(--body); font-size: var(--step--1); color: var(--ink-faint); }
+  .project-status p { margin: 0; color: var(--ink-soft); }
+  .status-grid { margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem 1.25rem; }
+  .status-grid div { border-top: 1px solid var(--line-soft); padding-top: 0.65rem; }
+  .status-grid dt { font-family: var(--mono); font-size: var(--step--1); color: var(--ink-faint); letter-spacing: 0.06em; }
+  .status-grid dd { margin: 0.25rem 0 0; color: var(--ink-soft); }
+  .toc { display: flex; flex-wrap: wrap; gap: 0.55rem 1rem; padding: 0.85rem 1rem; border: 1px solid var(--line); border-radius: 3px; background: var(--surface-2); }
+  .toc a { font-size: var(--step--1); }
+  main { display: flex; flex-direction: column; gap: clamp(2.5rem, 5vw, 4rem); }
+  main h2 { scroll-margin-top: 1rem; }
 
   /* ---------- stat band ---------- */
 
@@ -469,6 +494,14 @@
     min-width: 40rem;
   }
 
+  caption {
+    padding: 0.7rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--ink);
+    background: var(--surface);
+  }
+
   thead th {
     text-align: left;
     font-family: var(--mono);
@@ -556,12 +589,13 @@
     .tasks li { grid-template-columns: 1fr; }
     .tasks .t-note { grid-column: 1; }
     .ms__body { padding: 1rem 1rem 1.15rem; }
+    .status-grid { grid-template-columns: 1fr; }
   }
 
 /* ---------- this page only: language switch ---------- */
 .langswitch { display: inline-flex; gap: .5em; align-items: baseline; }
 .langswitch b { font-weight: 700; }
-.langswitch a { text-decoration: none; border-bottom: 1px solid currentColor; }
+.langswitch a { text-decoration: none; border-bottom: 1px solid currentColor; padding: .25rem .35rem; }
 
 /* ---------- this page only: code blocks ---------- */
 /* The roadmap page has no code blocks, so these are not in the shared sheet.
@@ -583,6 +617,7 @@ pre code { display: block; white-space: pre; }
    horizontal scrolling inside a code block is unusable on a phone. */
 pre.tokens code { white-space: pre-wrap; word-break: break-all; }
 </style>
+<a class="skip-link" href="#main-content">跳至主要內容</a>
 <div class="wrap">
 
   <header class="masthead">
@@ -591,7 +626,7 @@ pre.tokens code { white-space: pre-wrap; word-break: break-all; }
       <span>／</span>
       <span>有備而來 · Bond for the Future</span>
       <span>／</span>
-      <span>2026-08-16</span>
+      <span>量測：2026-08-16</span>
       <span>／</span>
       <span class="langswitch"><a href="/twdiw/" hreflang="en" lang="en">EN</a> · <b>中文</b></span>
     </div>
@@ -608,9 +643,34 @@ pre.tokens code { white-space: pre-wrap; word-break: break-all; }
     </span>
   </header>
 
+  <main id="main-content" tabindex="-1">
+    <section class="project-status" aria-labelledby="implementation-status">
+      <h2 id="implementation-status">目前實作狀態 <small>· 2026-08-24 更新</small></h2>
+      <p>底下的實作筆記仍是一份分級標示證據的紀錄；這裡只放皮夾現在真的做到哪。完整施工紀錄在<a href="/roadmap/">工程藍圖</a>。</p>
+      <dl class="status-grid">
+        <div><dt>已完成</dt><dd>M5.1 <code>did:key</code> 相容、M5.3 SD-JWT VC 解析，以及 M5.5 主要的能力對照與首頁卡片列。</dd></div>
+        <div><dt>下一個閘門</dt><dd>從 demo 完成一次 OID4VCI 領卡，量 <code>client_id=tw.bonds.backupTW</code> 是否被接受。</dd></div>
+        <div><dt>需要決定</dt><dd>任何表單提交或條款接受，都由使用者決定後才進行。</dd></div>
+        <div><dt>後續</dt><dd>M5.4 OID4VP、政府卡詳情與清除流程，最後以實機與 VoiceOver 做端到端驗收。</dd></div>
+      </dl>
+    </section>
+
+    <nav class="toc" aria-label="本頁章節">
+      <a href="#how-to-read">零 · 證據</a>
+      <a href="#third-party-wallet">一 · 皮夾角色</a>
+      <a href="#did-key">二 · did:key</a>
+      <a href="#sd-jwt">三 · SD-JWT</a>
+      <a href="#trust-list">四 · 信任清單</a>
+      <a href="#revocation">五 · 撤銷</a>
+      <a href="#privacy-leakage">六 · 隱私</a>
+      <a href="#offline-card-label">七 · 卡片名稱</a>
+      <a href="#upstream-reports">八 · 上游回報</a>
+      <a href="#verification-gaps">九 · 驗證缺口</a>
+    </nav>
+
   <section class="section">
     <header>
-      <h2>零、這一頁怎麼讀</h2>
+      <h2 id="how-to-read">零、這一頁怎麼讀</h2>
       <p>底下每一條主張都掛了證據等級。這件事在這裡比平常重要，因為其中幾條是對一個政府系統的缺陷回報，
       而一條經不起「你們實測過嗎」的主張，會連累其他站得住的。</p>
     </header>
@@ -640,11 +700,12 @@ pre.tokens code { white-space: pre-wrap; word-break: break-all; }
 
   <section class="section">
     <header>
-      <h2>一、第三方皮夾這個角色不存在</h2>
+      <h2 id="third-party-wallet">一、第三方皮夾這個角色不存在</h2>
       <p>不是「很難」。是文件、沙盒、資料模型裡都沒有這個角色。</p>
     </header>
     <div class="table-scroll">
       <table>
+        <caption>TWDIW 各角色在現有文件中的參與路徑</caption>
         <thead><tr><th scope="col">角色</th><th scope="col">要做什麼才能上場</th></tr></thead>
         <tbody>
           <tr><td>發行端</td><td>申請沙盒帳號 → 自架 → 跟團隊做 UAT → 正式</td></tr>
@@ -701,7 +762,7 @@ pre.tokens code { white-space: pre-wrap; word-break: break-all; }
 
   <section class="section">
     <header>
-      <h2>二、did:key 的拼法不是你實作的那一種</h2>
+      <h2 id="did-key">二、did:key 的拼法不是你實作的那一種</h2>
       <p>皮夾最先死在這裡，而且是以一個離真正原因兩層遠的解析錯誤死掉的。</p>
     </header>
     <p>
@@ -774,7 +835,7 @@ did:key:z2dmzD81cgPx8Vki7JbuuMmFYrWPodrZSqMbCy9Ndu4UgUGy3RNkhH479eLPpbfAhVSNu7B4
 
   <section class="section">
     <header>
-      <h2>三、憑證是 SD-JWT，而沒有任何欄位會告訴你</h2>
+      <h2 id="sd-jwt">三、憑證是 SD-JWT，而沒有任何欄位會告訴你</h2>
       <p>這是最貴的一個坑，因為寫錯的那個版本會通過你想得到的每一個測試。</p>
     </header>
     <div class="ms__body">
@@ -845,7 +906,7 @@ EOF</code></pre>
 
   <section class="section">
     <header>
-      <h2>四、信任清單</h2>
+      <h2 id="trust-list">四、信任清單</h2>
       <p>比想像中小，錨定得比想像中好，而它的分類標籤絕對不能顯示給使用者。</p>
     </header>
     <div class="ms__body">
@@ -906,7 +967,7 @@ EOF</code></pre>
 
   <section class="section">
     <header>
-      <h2>五、撤銷這條路沒有離線的信任錨點</h2>
+      <h2 id="revocation">五、撤銷這條路沒有離線的信任錨點</h2>
       <p>憑證那條路錨在公鏈上。撤銷這條路只有一個 URL。</p>
     </header>
     <div class="ms__body">
@@ -948,7 +1009,7 @@ EOF</code></pre>
 
   <section class="section">
     <header>
-      <h2>六、證明年齡會交出生日，而卡片本身會出賣自己</h2>
+      <h2 id="privacy-leakage">六、證明年齡會交出生日，而卡片本身會出賣自己</h2>
       <p>兩張完整的駕照電子卡，端到端驗過。分隔「已滿 18」與「未滿 18」的只有一個揭露
       ——而沒有任何辦法在不交出生日的情況下送出它。</p>
     </header>
@@ -1007,7 +1068,7 @@ EOF</code></pre>
   </section>
   <section class="section">
     <header>
-      <h2>七、皮夾裡的卡，離線時沒有名字</h2>
+      <h2 id="offline-card-label">七、皮夾裡的卡，離線時沒有名字</h2>
       <p>把卡片列做出來、render 出來、看了一眼才發現的。那一列長這樣：
       <code>00000000_demo_drivinglicense_202504251418</code>。</p>
     </header>
@@ -1055,7 +1116,7 @@ EOF</code></pre>
 
   <section class="section">
     <header>
-      <h2>八、八件值得回報上游的事</h2>
+      <h2 id="upstream-reports">八、八件值得回報上游的事</h2>
       <p>依使用者受害程度排，不是依技術嚴重度。第 6、7 件因為證據不足而暫緩，
       列在這裡是為了讓暫緩的理由看得見，而不是默默不提。</p>
     </header>
@@ -1164,7 +1225,7 @@ EOF</code></pre>
 
   <section class="section">
     <header>
-      <h2>九、我們沒有驗證過什麼</h2>
+      <h2 id="verification-gaps">九、我們沒有驗證過什麼</h2>
       <p>列出來是因為一頁只有發現而沒有這一節，等於在邀請別人過度解讀。</p>
     </header>
     <ul class="tasks">
@@ -1174,6 +1235,8 @@ EOF</code></pre>
       <li><span class="chip chip--blocked">缺口</span><span class="t-name">「欄位值都是字串」</span><span class="t-note">駕照那六個欄位都是字串。電信或超商取貨那些卡會不會帶非字串的值，不知道，而這件事的失敗形態很差：嚴格要求三元素字串陣列的讀取器會拒收<em>整張卡</em>，於是一張真卡被判成壞卡。</span></li>
     </ul>
   </section>
+
+  </main>
 
   <footer>
     <div>這些是做「有備而來」——一個離線優先的台灣身分皮夾——的過程中量到的。工程藍圖：<a href="/roadmap/">bonds-tw.github.io/roadmap</a>。</div>

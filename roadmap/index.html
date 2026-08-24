@@ -139,6 +139,15 @@
     border-radius: 2px;
   }
 
+  .skip-link {
+    position: fixed; top: 0.75rem; left: 0.75rem; z-index: 10;
+    transform: translateY(-200%);
+    padding: 0.65rem 0.9rem;
+    background: var(--ink); color: var(--ground); border-radius: 3px;
+  }
+  .skip-link:focus { transform: translateY(0); }
+  main { display: flex; flex-direction: column; gap: clamp(2.5rem, 5vw, 4rem); }
+
   /* ---------- masthead ---------- */
 
   .masthead { display: flex; flex-direction: column; gap: 1.25rem; }
@@ -401,6 +410,14 @@
     text-align: right;
   }
 
+  .gate-status {
+    margin: 0;
+    padding: 0.9rem 1rem;
+    border-left: 3px solid var(--accent);
+    background: var(--accent-bg);
+    color: var(--ink-soft);
+  }
+
   /* task list */
 
   .tasks {
@@ -464,6 +481,14 @@
     border-collapse: collapse;
     font-size: var(--step-0);
     min-width: 40rem;
+  }
+
+  caption {
+    padding: 0.7rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    color: var(--ink);
+    background: var(--surface);
   }
 
   thead th {
@@ -556,6 +581,7 @@
   }
 </style>
 
+<a class="skip-link" href="#main-content">跳至主要內容</a>
 <div class="wrap">
 
   <header class="masthead">
@@ -564,40 +590,50 @@
       <span>／</span>
       <span>有備而來 · Bond for the Future</span>
       <span>／</span>
-      <span>2026-08-10</span>
+      <span>狀態快照：2026-08-24</span>
     </div>
     <h1>工程藍圖與進度</h1>
     <p class="standfirst">
       把白皮書第 5 章的「小密封罐」拆成可施工的模組：資料可驗、本人可驗、離線驗證、驗證者端、互通。
       本頁追蹤每個模組的真實狀態——包含還沒開始的，以及還沒解決的。
     </p>
-    <span class="draft-flag">草案 v1.6 · 2026-08-11 更新：實機端到端數字入帳（真卡出示 15 張 QR、撤銷檢查 865 ms）；快照新鮮度上限；ZK 第七條 caveat；結果畫面重排</span>
+    <span class="draft-flag">持續更新中的施工紀錄。頁首只列目前可驗證的工程閘門；下方保留歷次量測與決策脈絡。</span>
   </header>
 
+  <main id="main-content" tabindex="-1">
   <dl class="stats">
     <div class="stat stat--ok">
-      <dt>已完成</dt>
-      <dd>27 <small>／ 34 項工作</small></dd>
+      <dt>目前主線</dt>
+      <dd>M5 <small>／ TWDIW 第三方皮夾</small></dd>
     </div>
     <div class="stat">
-      <dt>整體進度</dt>
-      <dd>79<small>%</small></dd>
+      <dt>下一個閘門</dt>
+      <dd>OID4VCI <small>／ demo 領卡</small></dd>
     </div>
     <div class="stat stat--ok">
-      <dt>測試</dt>
-      <dd>1009 <small>／ 2 skipped（沒設 ZK_BENCH_DIR 時的實測 spike）</small></dd>
+      <dt>最近記錄的測試基線</dt>
+      <dd>1,191 <small>／ 本次只改網站，未重跑 App 測試</small></dd>
     </div>
     <div class="stat">
-      <dt>負責人</dt>
-      <dd>豆泥 <small>／ 全部里程碑</small></dd>
+      <dt>發佈前驗收</dt>
+      <dd>實機＋VoiceOver <small>／ 端到端</small></dd>
     </div>
   </dl>
 
   <section class="section">
     <header>
-      <h2>擋在最前面的那件事</h2>
-      <p>上一版是 TW FidO SP 資格。測試憑證到位後，路障換人了——而且換成小很多的一個。</p>
+      <h2>目前的工程閘門</h2>
+      <p>不用一個失真的百分比概括整個專案；每一個狀態都要能由實機、測試或明確的外部前置條件驗證。</p>
     </header>
+    <div class="blocker">
+      <h3>進行中：TWDIW M5.2 demo 領卡</h3>
+      <p>
+        下一個可證偽的結果，是從 demo 完成一次 OID4VCI 領卡，先量
+        <code>client_id=tw.bonds.backupTW</code> 是否被接受。M5.1 與 M5.3 已完成，
+        M5.5 已有主要畫面；M5.4 OID4VP 與政府卡詳情仍在後面。
+      </p>
+      <p><strong>任何表單提交或條款接受，都由使用者決定後才進行。</strong></p>
+    </div>
     <div class="blocker blocker--resolved">
       <h3>已解鎖：TW FidO 模擬測試憑證到位</h3>
       <p>
@@ -958,18 +994,15 @@
       </article>
 
       <!-- M5 -->
-      <article class="ms">
+      <article class="ms ms--active">
         <div class="ms__rail"><span class="ms__id">M5</span><span class="ms__dot"></span></div>
         <div class="ms__body">
           <div class="ms__head">
             <h3 class="ms__title">第三方皮夾：把台灣數位憑證皮夾（TWDIW）整合進來</h3>
-            <span class="ms__meta">豆泥 · 相依 M1 · 2026-08-16 重新定義範圍</span>
+            <span class="ms__meta">豆泥 · 相依 M1 · 2026-08-24 依工程閘門同步</span>
           </div>
           <p class="ms__goal">原本只寫「資料模型留好接口」。<strong>範圍已擴大成真的做一個第三方皮夾</strong>：官方認證的發行者與驗證者都能跑完整流程，皮夾裡除了我們自己的身分證，還有駕照電子卡等官方憑證。目的不是相容性打勾，是<strong>證明最理想的皮夾長什麼樣子</strong>——把三種信任模型並排，讓它們的差異第一次變得可見。完整規劃在 <code>docs/twdiw-integration-plan.md</code>。</p>
-          <div class="meter">
-            <div class="meter__bar"><div class="meter__fill" style="width:34%"></div></div>
-            <span class="meter__pct">34%</span>
-          </div>
+          <p class="gate-status"><strong>下一個閘門：M5.2 demo OID4VCI 領卡。</strong>完成項、待驗證項與需要使用者決定的動作分開記，不再用單一百分比混在一起。</p>
           <ul class="tasks">
             <li>
               <span class="chip chip--done">已完成</span>
@@ -982,8 +1015,9 @@
               <span class="t-note">新增 <code>jwk_jcs-pub</code> 編解碼，與現有 <code>p256-pub</code> <strong>並存</strong>（我們自己那條離線路徑的 DID 不改）。<br><strong>而且官方皮夾自己的 DID 不符合它宣稱的編碼</strong>：<code>jwk_jcs-pub</code> 的定義就是 JWK 經過 JCS（RFC 8785），鍵序必須 <code>crv &lt; kty &lt; x &lt; y</code>。機關 DID 是 <code>crv,kty,x,y</code> ✅；<strong>官方皮夾的 holder DID 是 <code>crv,x,y,kty</code> ❌</strong>。我們的 <code>DIDKey</code> 有一個 <code>nonCanonicalDID</code> 錯誤案例，存在的理由正是拒絕這種東西——<strong>所以嚴格照規範實作的解析器，會拒絕真實世界唯一存在的那個台灣皮夾。</strong><br>由此定一條不對稱規則：<strong>我們自己產生的一律 JCS 正規；解析別人的一律不要求正規。</strong> 正規化是我們對自己的義務，拿它去否決別人只會讓我們無法互通。<br>閘門：用官方那個非正規 holder DID 當測試向量，必須解得開。不碰網路，可離線做完。</span>
             </li>
             <li>
-              <span class="chip chip--blocked">卡住</span>
-              <span class="t-name">M5.2　OID4VCI 領卡（沙盒）——卡在兩個必須先決定的事</span>
+              <span class="chip chip--partial">下一步</span>
+              <span class="t-name">M5.2　OID4VCI 領卡（demo）——下一個可證偽閘門</span>
+              <span class="t-note"><strong>2026-08-24 現況：尚未真的領到卡；先前的一卡一金鑰與發行者授權紅線已清除。下一步先量自己的 <code>client_id</code>，任何表單或條款由使用者決定。</strong></span>
               <span class="t-note">五步實測順序：<code>credential-offer-object</code> → <code>.well-known/openid-credential-issuer</code> → <code>/token</code>（pre-authorized_code + tx_code）→ <code>/credential</code>（proof JWT，<code>typ: openid4vci-proof+jwt</code>，<code>aud</code> <strong>結尾有斜線</strong>）→ 抓卡面圖。<code>CredentialStore</code> 本來就是一檔一憑證、有 <code>allIDs()</code>，<strong>結構上已經是多卡的</strong>，不必改。<br>⚠️ <strong><code>client_id</code> 要送什麼是「先量再決定」，不是先決定。</strong> 送 <code>moda_dw</code> 一定會通，但不該長期冒用官方 App 的識別字串。做法是先送 <code>tw.bonds.backupTW</code> 量它會不會被拒：通過就用我們自己的；<strong>被拒的話，那件事本身就是要回報的發現</strong>——TWDIW 沒有辦法讓第三方皮夾正當地表明身分，於是唯一能跑的方式是冒充。<br>前置：沙盒帳號申請的對象是發行／驗證端，<strong>但 demo 站的「訪客領卡」不需要帳號</strong>，可以先不申請就跑通。要不要申請、要不要按同意服務條款，由使用者決定。<br><br><strong>⛔ 2026-08-16 對抗式查證擋下兩件事。② 已完成，① 卡在一個必須先做的量測：</strong><br><span style="opacity:.75">（進行中：卡片層已完成——<code>StoredCardSource</code>，順手抓到「出示會靜默改指第一張官方卡」這個活著的缺陷。發行者授權閘門已完成——兩道閘門、主機當主機比不用前綴、無法正規化的一律拒絕、比中之後改用清單自己的字串。<strong>① 一卡一金鑰卡在紅線</strong>：整套 Keychain 列舉壓在一條從來沒量過的假設上（<code>SecItemCopyMatching</code> + <code>kSecMatchLimitAll</code> 看不看得到 Secure Enclave 金鑰、tag 與建立時間回不回得來），而漏看一把的後果是<strong>靜默的</strong>——掃描刪 0 把、驗證通過、使用者被告知已清除。本專案的規矩是先量再決定，所以停在真機量測前面。）</span><br><strong>①「這個發行者是誰」沒有人檢查。</strong> 領卡流程的 URL 全部來自一張 QR，而其中一步會用持有人金鑰簽一個 proof JWT、<code>aud</code> 直接填對方給的值。<strong>任何人印一張 QR，就能讓皮夾對他指定的 URL 產生一個由裝置長期金鑰簽出來、內容由他選的 JWT。</strong> 本專案對這類輸入已經有立場（<code>MOICACallbackRouter</code> 檔頭：inbound URL 是 untrusted input，只能當「再去查一次」的訊號）。而那 43 筆信任清單正好可以拿來比對 issuer DID。<br><strong>② 要用哪一把持有人金鑰。</strong> 若沿用現有那把唯一的 <code>DeviceKey</code>，TWDIW 憑證的 <code>cnf.jwk</code> 會被寫進政府發行端的資料庫，<strong>而那串位元組正是任何一個離線查驗方看到的識別碼</strong>。我們刻意讓自然人憑證那條路拿不到統一編號，結果會從另一扇門交出一個更好用的索引——而且<strong>這條汙染不需要任何人上網才生效</strong>，離線出示的那張卡上就帶著這個公鑰。→ 至少一卡一金鑰；而一旦有第二把，<code>IdentityReset</code> 只吃單一 <code>keyTag</code> 就不夠用了，「重設身分」會漏掉 TWDIW 那幾把。<br><br><strong>✅ 2026-08-16 實機量測：① 的紅線清掉了。</strong> iPhone 14 實機，五題全部是好消息——列舉看得到 Secure Enclave 金鑰（<code>tokenID=com.apple.setoken</code>）、<code>kSecAttrApplicationTag</code> 帶得回、<code>kSecAttrCreationDate</code> 帶得回、用 <code>kSecValueRef</code> 刪得掉、掃完剩 0 把。所以「列舉當真相來源不必維護清單」「用建立時間當護欄避免刪到領卡中途那把」都成立。<br>⚠️ <strong>模擬器不能拿來回答這一題</strong>：同一支測試在模擬器上五題也全部「通過」，因為它會回報 <code>com.apple.setoken</code> 而那裡根本沒有 SEP。測試裡因此多一支專門在模擬器上印警告的，免得一次綠燈被當成答案。<br><strong>② 已完成</strong>：兩道閘門、主機當主機比不用前綴、無法正規化的一律拒絕、比中之後改用清單自己的字串。</span>
             </li>
             <li>
@@ -1056,7 +1090,7 @@
     </div>
 
     <div class="ms__body">
-      <p class="ms__goal">其餘 37 條尚未動工。以下是還沒修、但值得單獨提的幾條。</p>
+      <p class="ms__goal"><strong>歷史盤點摘錄。</strong>以下幾條保留的是 2026-08-13 初次發現問題時的描述與「待辦」標記；40 條已於 2026-08-17 全數結案，現況以上方結案摘要與 <code>docs/ux-audit-2026-08-18.md</code> 為準。</p>
       <ul class="tasks">
         <li>
           <span class="chip chip--todo">待辦</span>
@@ -1104,6 +1138,7 @@
     </header>
     <div class="table-scroll">
       <table>
+        <caption>各項既有資產的內容、最近狀態與處置方向</caption>
         <thead>
           <tr>
             <th scope="col">資產</th>
@@ -1178,6 +1213,7 @@
     </header>
     <div class="table-scroll">
       <table>
+        <caption>已知風險、影響與目前對策</caption>
         <thead>
           <tr>
             <th scope="col">風險</th>
@@ -1202,9 +1238,9 @@
             <td>視為開發用鷹架。專屬 SP 申請與組織 Apple 帳號同批送，別因為「能跑了」而忘記</td>
           </tr>
           <tr>
-            <td>開發機沒有 Xcode 且空間不足</td>
-            <td>iOS 端一步都動不了</td>
-            <td>先清 25 GiB 再裝 Xcode 26+；同時先跑不需要 Xcode 的 node 驗證步驟</td>
+            <td><strong>已解決：</strong>開發機的 Xcode 與空間前置</td>
+            <td>Xcode 27 beta 已可用；這條不再阻擋 iOS 開發</td>
+            <td>保留 <code>DEVELOPER_DIR</code> 指向 Xcode-beta 的做法，並持續以實機回答 Secure Enclave 等模擬器無法證實的問題</td>
           </tr>
           <tr>
             <td>macOS arm64 witnesscalc SIGSEGV</td>
@@ -1338,8 +1374,10 @@
     </div>
   </section>
 
+  </main>
+
   <footer>
-    <div>本頁狀態為 2026-08-10 的實地盤點結果，隨施工進度更新。全部里程碑負責人：豆泥。</div>
+    <div>本頁狀態快照更新於 2026-08-24；下方長篇內容保留歷次施工與量測脈絡。全部里程碑負責人：豆泥。</div>
     <div>相關頁面：<a href="/twdiw/">TWDIW Field Notes</a>——做第三方皮夾時撞到的牆，補強 denkeni 那份 Missing Manual 空著的那一節（英文）。</div>
     <div>依據：<a href="https://blog.bonds.tw/litepaper/#50">《有備而來》白皮書第 5 章</a>、《行動自然人憑證應用程式介面規格書 v2.9》．上游 ZK 元件：<a href="https://github.com/privacy-ethereum/ZK-based-Proof-of-Personhood">privacy-ethereum/ZK-based-Proof-of-Personhood</a>．前案：<a href="https://github.com/thematters/zkid-personhood">thematters/zkid-personhood</a></div>
   </footer>
