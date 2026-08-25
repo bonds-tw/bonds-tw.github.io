@@ -649,13 +649,13 @@ pre.tokens code { white-space: pre-wrap; word-break: break-all; }
 
   <main id="main-content" tabindex="-1">
     <section class="project-status" aria-labelledby="implementation-status">
-      <h2 id="implementation-status">Implementation status <small>· updated 2026-08-24</small></h2>
+      <h2 id="implementation-status">Implementation status <small>· updated 2026-08-26</small></h2>
       <p>The field notes below remain an evidence-graded record. This compact status shows where the wallet implementation actually stands; the <a href="/roadmap/">engineering roadmap</a> carries the full working log.</p>
       <dl class="status-grid">
-        <div><dt>Completed</dt><dd>M5.1 <code>did:key</code> compatibility and M5.3 SD-JWT VC parsing; the main M5.5 comparison and card-list UI.</dd></div>
-        <div><dt>Next gate</dt><dd>Complete one OID4VCI issuance from the demo and measure whether <code>client_id=tw.bonds.backupTW</code> is accepted.</dd></div>
+        <div><dt>Completed</dt><dd>M5.1 <code>did:key</code> compatibility, M5.3 SD-JWT VC parsing, the M5.5 comparison and card-list UI, and the <strong>M5.2 wallet side</strong>: credential-offer parsing, the two trust-list gates before collection, one key per card, and proof-JWT generation.</dd></div>
+        <div><dt>Next gate</dt><dd>Measured 2026-08-26: the app ran a <code>demo.wallet.gov.tw</code> offer all the way to the token step — <code>URLSession</code> cleared Cloudflare and reached the issuer's business response — but stalled on <code>pre-authorized_code not found</code> (HTTP 400). <strong>TTL ruled out</strong>; most likely the offer and the token live in different environments (the deep link goes through UAT while the offer_uri points at a production-ish issuer). Whether <code>client_id</code> is accepted is therefore still unanswered — the flow stops before that check. Breaking through needs a UAT account.</dd></div>
         <div><dt>Decision needed</dt><dd>The user must decide before any form is submitted or any terms are accepted.</dd></div>
-        <div><dt>After that</dt><dd>M5.4 OID4VP, government-card details and erasure, then end-to-end device and VoiceOver validation.</dd></div>
+        <div><dt>After that</dt><dd>M5.4 OID4VP presentation, government-card details and erasure, then end-to-end device and VoiceOver validation.</dd></div>
       </dl>
     </section>
 
@@ -1270,10 +1270,10 @@ EOF</code></pre>
       <p>Listed because a page of findings without this section is asking to be over-read.</p>
     </header>
     <ul class="tasks">
-      <li><span class="chip chip--blocked">Gap</span><span class="t-name">We have never collected a credential</span><span class="t-note">Everything about issuance is read from source. The one step that requires submitting a form is the one step we have not taken, and it is also the step that would settle whether a non-<code>moda_dw</code> <code>client_id</code> is accepted.</span></li>
+      <li><span class="chip chip--partial">Partial</span><span class="t-name">Collection reaches the token step, no card yet</span><span class="t-note">Measured 2026-08-26: a driving-licence offer generated on <code>demo.wallet.gov.tw</code> ran all the way to the token step — <code>URLSession</code> cleared Cloudflare, the issuer accepted the request and answered with a business error, stalling on <code>pre-authorized_code not found</code> (HTTP 400). TTL is ruled out (a millisecond-apart curl GET→token gets the same not-found); most likely the offer and token live in different environments (deep link via UAT, offer_uri at a production-ish issuer). Whether a non-<code>moda_dw</code> <code>client_id</code> is accepted is therefore <strong>still unsettled</strong> — the flow stops before that check. This is not a wallet-side bug; the collector ran the whole chain.</span></li>
       <li><span class="chip chip--blocked">Gap</span><span class="t-name">Source ≠ deployment</span><span class="t-note">Findings 1–4 and 6 are read from the published repository. We cannot confirm the deployed builds match it.</span></li>
       <li><span class="chip chip--blocked">Gap</span><span class="t-name">One configuration, one moment</span><span class="t-note">The status-list measurements are a single configuration at a single time. The other 881 have not been sampled.</span></li>
-      <li><span class="chip chip--blocked">Gap</span><span class="t-name">All-string claim values</span><span class="t-note">The driving licence's six fields are all strings. Whether telecom or parcel-pickup credentials carry non-string values is unknown, and it matters: a strict three-element-array reader rejects the <em>whole card</em>, so a real credential would be reported as a broken one.</span></li>
+      <li><span class="chip chip--blocked">Gap</span><span class="t-name">All-string claim values</span><span class="t-note">The driving licence's six fields are all strings. On 2026-08-26 the issuer metadata confirmed three cards exist: <code>universal_telecom_card</code> carries <code>phone</code>; <code>convenience_store</code> carries <code>name</code> + <code>Phone_number_last3</code> (the two fields a store counter checks for parcel pickup, note the mixed-case name). But their <em>value types</em> are still unknown — these are not in the demo guest-collection dropdown (only driving licence, visitor, income, student ID, diploma), so collecting them needs the official app's phone/account verification. It matters: a strict three-element-array reader rejects the <em>whole card</em>, so a real credential would be reported as a broken one.</span></li>
     </ul>
   </section>
 

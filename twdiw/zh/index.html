@@ -645,13 +645,13 @@ pre.tokens code { white-space: pre-wrap; word-break: break-all; }
 
   <main id="main-content" tabindex="-1">
     <section class="project-status" aria-labelledby="implementation-status">
-      <h2 id="implementation-status">目前實作狀態 <small>· 2026-08-24 更新</small></h2>
+      <h2 id="implementation-status">目前實作狀態 <small>· 2026-08-26 更新</small></h2>
       <p>底下的實作筆記仍是一份分級標示證據的紀錄；這裡只放皮夾現在真的做到哪。完整施工紀錄在<a href="/roadmap/">工程藍圖</a>。</p>
       <dl class="status-grid">
-        <div><dt>已完成</dt><dd>M5.1 <code>did:key</code> 相容、M5.3 SD-JWT VC 解析，以及 M5.5 主要的能力對照與首頁卡片列。</dd></div>
-        <div><dt>下一個閘門</dt><dd>從 demo 完成一次 OID4VCI 領卡，量 <code>client_id=tw.bonds.backupTW</code> 是否被接受。</dd></div>
+        <div><dt>已完成</dt><dd>M5.1 <code>did:key</code> 相容、M5.3 SD-JWT VC 解析、M5.5 能力對照與首頁卡片列，以及 <strong>M5.2 皮夾端</strong>：credential offer 解析、領卡前的兩道信任清單閘門、一卡一金鑰、proof JWT 產生。</dd></div>
+        <div><dt>下一個閘門</dt><dd>2026-08-26 實測：App 對 <code>demo.wallet.gov.tw</code> 的 offer 完整跑到 token 步驟，<code>URLSession</code> 過了 Cloudflare、拿到 issuer 的業務回應，但卡在 <code>pre-authorized_code not found</code>（HTTP 400）。<strong>已排除 TTL</strong>——最可能是 offer 與 token 分屬不同環境（deeplink 走 UAT、offer_uri 指向 production-ish issuer）。<code>client_id</code> 是否被接受因此還沒判定，它被擋在這一步之前。要突破需 UAT 帳號。</dd></div>
         <div><dt>需要決定</dt><dd>任何表單提交或條款接受，都由使用者決定後才進行。</dd></div>
-        <div><dt>後續</dt><dd>M5.4 OID4VP、政府卡詳情與清除流程，最後以實機與 VoiceOver 做端到端驗收。</dd></div>
+        <div><dt>後續</dt><dd>M5.4 OID4VP 出示、政府卡詳情與清除流程，最後以實機與 VoiceOver 做端到端驗收。</dd></div>
       </dl>
     </section>
 
@@ -1229,10 +1229,10 @@ EOF</code></pre>
       <p>列出來是因為一頁只有發現而沒有這一節，等於在邀請別人過度解讀。</p>
     </header>
     <ul class="tasks">
-      <li><span class="chip chip--blocked">缺口</span><span class="t-name">我們從來沒有領過一張卡</span><span class="t-note">關於發卡的每一件事都是讀原始碼讀出來的。唯一需要送出表單的那一步，正是我們沒有走的那一步——而那一步同時會回答「送一個不是 <code>moda_dw</code> 的 <code>client_id</code> 會不會被拒」。</span></li>
+      <li><span class="chip chip--partial">部分</span><span class="t-name">領卡跑到 token，還沒領到卡</span><span class="t-note">2026-08-26 實測：從 <code>demo.wallet.gov.tw</code> 產生駕照卡 offer，App 完整走到 token 步驟——<code>URLSession</code> 過了 Cloudflare、issuer 收下請求並回以業務錯誤，卡在 <code>pre-authorized_code not found</code>（HTTP 400）。已排除 TTL（curl 毫秒級連續 GET→token 同樣 not found）；最可能是 offer 與 token 分屬不同環境（deeplink 走 UAT，offer_uri 指 production-ish issuer）。因此「送一個不是 <code>moda_dw</code> 的 <code>client_id</code> 會不會被拒」<strong>仍未判定</strong>——它被擋在 pre-auth code 之前。這不是皮夾端的 bug，collector 走完了整條鏈。</span></li>
       <li><span class="chip chip--blocked">缺口</span><span class="t-name">原始碼不等於部署</span><span class="t-note">第一到第四與第六件都是從公開 repo 讀出來的。我們無法確認部署上去的 build 與它一致。</span></li>
       <li><span class="chip chip--blocked">缺口</span><span class="t-name">一組設定、一個時間點</span><span class="t-note">撤銷清單的量測是單一設定在單一時刻。另外 881 組沒有取樣。</span></li>
-      <li><span class="chip chip--blocked">缺口</span><span class="t-name">「欄位值都是字串」</span><span class="t-note">駕照那六個欄位都是字串。電信或超商取貨那些卡會不會帶非字串的值，不知道，而這件事的失敗形態很差：嚴格要求三元素字串陣列的讀取器會拒收<em>整張卡</em>，於是一張真卡被判成壞卡。</span></li>
+      <li><span class="chip chip--blocked">缺口</span><span class="t-name">「欄位值都是字串」</span><span class="t-note">駕照那六個欄位都是字串。2026-08-26 讀 issuer metadata 確認這三張卡存在：<code>universal_telecom_card</code>「萬用電信卡」帶 <code>phone</code>、<code>convenience_store</code>「便利商店取貨卡」帶 <code>name</code>＋<code>Phone_number_last3</code>（超商取貨核銷比對的兩欄，欄名大小寫混合）。但這幾張的<em>值型別</em>仍不知道——它們不在 demo 訪客領卡的下拉裡（只有駕照、訪客、所得、學生證、畢業證書），要走官方 App 的門號／帳號驗證才領得到。失敗形態很差：嚴格要求三元素字串陣列的讀取器會拒收<em>整張卡</em>，於是一張真卡被判成壞卡。</span></li>
     </ul>
   </section>
 
