@@ -645,13 +645,13 @@ pre.tokens code { white-space: pre-wrap; word-break: break-all; }
 
   <main id="main-content" tabindex="-1">
     <section class="project-status" aria-labelledby="implementation-status">
-      <h2 id="implementation-status">目前實作狀態 <small>· 2026-08-26 更新</small></h2>
+      <h2 id="implementation-status">目前實作狀態 <small>· 2026-08-30 更新</small></h2>
       <p>底下的實作筆記仍是一份分級標示證據的紀錄；這裡只放皮夾現在真的做到哪。完整施工紀錄在<a href="/roadmap/">工程藍圖</a>。</p>
       <dl class="status-grid">
-        <div><dt>已完成</dt><dd>M5.1 <code>did:key</code> 相容、M5.3 SD-JWT VC 解析、M5.5 能力對照與首頁卡片列，以及 <strong>M5.2 皮夾端</strong>：credential offer 解析、領卡前的兩道信任清單閘門、一卡一金鑰、proof JWT 產生。</dd></div>
-        <div><dt>下一個閘門</dt><dd>2026-08-26 實測：App 對 <code>demo.wallet.gov.tw</code> 的 offer 完整跑到 token 步驟，<code>URLSession</code> 過了 Cloudflare、拿到 issuer 的業務回應，但卡在 <code>pre-authorized_code not found</code>（HTTP 400）。<strong>已排除 TTL</strong>——最可能是 offer 與 token 分屬不同環境（deeplink 走 UAT、offer_uri 指向 production-ish issuer）。<code>client_id</code> 是否被接受因此還沒判定，它被擋在這一步之前。要突破需 UAT 帳號。</dd></div>
+        <div><dt>已完成 · 領卡</dt><dd><strong>真實政府卡端到端領下來了</strong>：交通部公路局的駕照電子卡走完整 OID4VCI 入庫顯示。<code>token</code> 400 的關卡已解——眉角是端點以 <code>client_id=moda_dw</code> 成對查 <code>pre-authorized_code</code>；送 app 自己的 bundle id 會 <code>not found</code>。</dd></div>
+        <div><dt>已完成 · 出示</dt><dd><strong>M5.4 OID4VP 出示端到端通過</strong>：同一張真卡選擇性揭露，先對官方 demo 驗證方通過，再對本專案獨立自建的 verifier（<code>verifier.mashbean.net</code>，Cloudflare Workers）跨裝置驗證通過。</dd></div>
+        <div><dt>下一個閘門</dt><dd>資料保險箱：MyData 七份文件（所得／勞保／健保／納稅／勞退／地籍／戶籍謄本）路徑已配好、可在 app 內直抓，非身分證文件的欄位解析待見到真實資料逐份寫。</dd></div>
         <div><dt>需要決定</dt><dd>任何表單提交或條款接受，都由使用者決定後才進行。</dd></div>
-        <div><dt>後續</dt><dd>M5.4 OID4VP 出示、政府卡詳情與清除流程，最後以實機與 VoiceOver 做端到端驗收。</dd></div>
       </dl>
     </section>
 
@@ -692,9 +692,11 @@ pre.tokens code { white-space: pre-wrap; word-break: break-all; }
       </li>
     </ul>
     <p style="margin-top:20px">
-      <strong>這一頁沒有的東西：我們從來沒有真的領過一張卡。</strong>
-      底下沒有一件事需要發出一張憑證才做得到，所以也不要把它讀成「整條流程我們跑過而且會通」。
-      唯一需要送出表單的那一步，正是我們沒有走的那一步。
+      <strong>這些筆記是怎麼來的：唯讀量測與讀碼，寫的當下我們還沒領過任何一張卡。</strong>
+      底下沒有一件事需要發出一張憑證才做得到——這是它們的證據來源，也是它們的限度。
+      <em>但自筆記寫成之後，情況已經往前走了：</em>真實駕照電子卡已完整領下來、也已出示並被驗證方
+      端到端驗過（見上方實作狀態）。所以請把底下各節讀成「當時對公開端點與原始碼量到的事實」，
+      而不是專案現在的邊界。
     </p>
   </section>
 

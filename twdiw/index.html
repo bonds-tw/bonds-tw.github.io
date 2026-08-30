@@ -649,13 +649,13 @@ pre.tokens code { white-space: pre-wrap; word-break: break-all; }
 
   <main id="main-content" tabindex="-1">
     <section class="project-status" aria-labelledby="implementation-status">
-      <h2 id="implementation-status">Implementation status <small>· updated 2026-08-26</small></h2>
+      <h2 id="implementation-status">Implementation status <small>· updated 2026-08-30</small></h2>
       <p>The field notes below remain an evidence-graded record. This compact status shows where the wallet implementation actually stands; the <a href="/roadmap/">engineering roadmap</a> carries the full working log.</p>
       <dl class="status-grid">
-        <div><dt>Completed</dt><dd>M5.1 <code>did:key</code> compatibility, M5.3 SD-JWT VC parsing, the M5.5 comparison and card-list UI, and the <strong>M5.2 wallet side</strong>: credential-offer parsing, the two trust-list gates before collection, one key per card, and proof-JWT generation.</dd></div>
-        <div><dt>Next gate</dt><dd>Measured 2026-08-26: the app ran a <code>demo.wallet.gov.tw</code> offer all the way to the token step — <code>URLSession</code> cleared Cloudflare and reached the issuer's business response — but stalled on <code>pre-authorized_code not found</code> (HTTP 400). <strong>TTL ruled out</strong>; most likely the offer and the token live in different environments (the deep link goes through UAT while the offer_uri points at a production-ish issuer). Whether <code>client_id</code> is accepted is therefore still unanswered — the flow stops before that check. Breaking through needs a UAT account.</dd></div>
+        <div><dt>Completed · collection</dt><dd><strong>A real government card was collected end-to-end</strong>: the 交通部公路局 driving-licence card ran the full OID4VCI flow into the store. The token 400 is solved — the endpoint pairs <code>pre-authorized_code</code> with <code>client_id=moda_dw</code>; sending the app's own bundle id returns <code>not found</code>.</dd></div>
+        <div><dt>Completed · presentation</dt><dd><strong>M5.4 OID4VP presentation verified end-to-end</strong>: the same real card, selectively disclosed, passed against the official demo verifier and against this project's own independent verifier (<code>verifier.mashbean.net</code>, Cloudflare Workers) across devices.</dd></div>
+        <div><dt>Next gate</dt><dd>The data vault: the seven MyData documents (income / labour insurance / NHI / tax / labour pension / land / household record) have their real item paths wired and fetch in-app; per-document field parsing awaits real data for the non-ID documents.</dd></div>
         <div><dt>Decision needed</dt><dd>The user must decide before any form is submitted or any terms are accepted.</dd></div>
-        <div><dt>After that</dt><dd>M5.4 OID4VP presentation, government-card details and erasure, then end-to-end device and VoiceOver validation.</dd></div>
       </dl>
     </section>
 
@@ -697,9 +697,12 @@ pre.tokens code { white-space: pre-wrap; word-break: break-all; }
       </li>
     </ul>
     <p style="margin-top:20px">
-      <strong>What this page does not have:</strong> we have never actually collected a credential.
-      Nothing here required issuing one, and nothing here should be read as "we ran the whole flow
-      and it worked". The one step that needs a form submission is the one step we have not taken.
+      <strong>How these notes were made:</strong> read-only measurements and source reading; at the time of
+      writing we had not yet collected any card. Nothing below required issuing one — that is their
+      evidence base and their limit. <em>Since the notes were written, things have moved on:</em> a real
+      driving-licence card has been collected end-to-end and presented to a verifier that accepted it
+      (see the status above). So read each section as "the facts measured against public endpoints and
+      source at the time", not as the project's current boundary.
     </p>
     <p>
       <strong>中文摘要：</strong>這一頁是做第三方皮夾時撞到的牆——文件與實際部署的差別、規範偏差、

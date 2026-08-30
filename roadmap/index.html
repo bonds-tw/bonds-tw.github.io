@@ -590,7 +590,7 @@
       <span>／</span>
       <span>有備而來 · Bond for the Future</span>
       <span>／</span>
-      <span>狀態快照：2026-08-24</span>
+      <span>狀態快照：2026-08-30</span>
     </div>
     <h1>工程藍圖與進度</h1>
     <p class="standfirst">
@@ -604,19 +604,19 @@
   <dl class="stats">
     <div class="stat stat--ok">
       <dt>目前主線</dt>
-      <dd>M5 <small>／ TWDIW 第三方皮夾</small></dd>
+      <dd>M5 <small>／ 領卡與出示對真實政府卡皆通</small></dd>
     </div>
     <div class="stat">
       <dt>下一個閘門</dt>
-      <dd>OID4VCI <small>／ demo 領卡</small></dd>
+      <dd>資料保險箱 <small>／ MyData per-doc 解析</small></dd>
     </div>
     <div class="stat stat--ok">
       <dt>最近記錄的測試基線</dt>
-      <dd>1,191 <small>／ 本次只改網站，未重跑 App 測試</small></dd>
+      <dd>1,426 <small>／ App；未簽章模擬器 keychain 失敗為既有環境限制</small></dd>
     </div>
-    <div class="stat">
-      <dt>發佈前驗收</dt>
-      <dd>實機＋VoiceOver <small>／ 端到端</small></dd>
+    <div class="stat stat--ok">
+      <dt>獨立驗證方</dt>
+      <dd>已上線 <small>／ verifier.mashbean.net · 真卡端到端驗過</small></dd>
     </div>
   </dl>
 
@@ -626,13 +626,30 @@
       <p>不用一個失真的百分比概括整個專案；每一個狀態都要能由實機、測試或明確的外部前置條件驗證。</p>
     </header>
     <div class="blocker">
-      <h3>進行中：TWDIW M5.2 demo 領卡</h3>
+      <h3>進行中：資料保險箱 — MyData per-doc 解析</h3>
       <p>
-        下一個可證偽的結果，是從 demo 完成一次 OID4VCI 領卡，先量
-        <code>client_id=tw.bonds.backupTW</code> 是否被接受。M5.1 與 M5.3 已完成，
-        M5.5 已有主要畫面；M5.4 OID4VP 與政府卡詳情仍在後面。
+        領卡與出示都對真實政府卡打通後，目前的前緣移到資料保險箱：MyData 的七份文件
+        （所得／勞保／健保／納稅／勞退／地籍／戶籍謄本）真實項目路徑都已配好、也能在 app 內
+        直接抓下來，但<strong>非身分證文件下載後的欄位解析仍待見到真實資料才能逐份寫</strong>。
+        依使用者拍板：原檔先加密存證、格式維持符合 VCDM 2.0 的 SD-JWT-VC、日後再走零知識證明。
       </p>
       <p><strong>任何表單提交或條款接受，都由使用者決定後才進行。</strong></p>
+    </div>
+    <div class="blocker blocker--resolved">
+      <h3>已達成：領卡與出示都對真實政府卡端到端打通</h3>
+      <p>
+        <strong>領卡</strong>：真實駕照電子卡（交通部公路局）走完整 OID4VCI 領下來、入庫顯示——
+        關鍵眉角是 token 端點的 <code>client_id=moda_dw</code>（成對查 pre-authorized_code）。
+        <strong>出示</strong>：同一張真卡以 OID4VP 出示、選擇性揭露，先對官方 demo 驗證方通過；
+        再對本專案獨立自建的 verifier（Cloudflare Workers，<code>verifier.mashbean.net</code>）
+        <strong>跨裝置端到端驗證通過</strong>——涵蓋簽章式 request、外層 VP JWT 的 holder 綁定、
+        <code>did:key</code> 發卡者本地解析、內層憑證發卡簽章與 <code>cnf</code> 綁定。
+      </p>
+      <p>
+        <strong>眉角記帳</strong>：TWDIW 的 issuer 與 holder 識別子都是 <code>did:key</code>
+        （<code>jwk_jcs-pub</code>，金鑰內嵌自證），不走 <code>.well-known</code> JWKS；VP token 是
+        外層 <code>jwt_vp</code> 包 <code>jwt_vc</code>，而非裸 SD-JWT-VC。
+      </p>
     </div>
     <div class="blocker blocker--resolved">
       <h3>已解鎖：TW FidO 模擬測試憑證到位</h3>
@@ -726,6 +743,38 @@
           TW FidO／MOICA 來的是<em>持有證明與意思表示</em>。
           資料模型上做成兩個 credential、以同一把裝置金鑰綁定，
           日後 MyData 補上文件級簽章時，只需替換前者的信任根，不必動整個皮夾。
+        </p>
+      </div>
+
+      <div class="decision">
+        <h3><span class="d-id">D-05</span> 憑證格式維持 SD-JWT-VC，且必須符合 VCDM 2.0</h3>
+        <p>
+          不換格式。app 全線已是 W3C VCDM 2.0 資料模型（<code>@context</code> v2 為首、
+          <code>validFrom</code>、<code>credentialSubject</code>、VC-JOSE-COSE <code>vc+jwt</code> 簽章），
+          選擇性揭露走 SD-JWT 式 <code>_sd</code>。誠實註記：<code>_sd</code> 是專案自定 sibling，
+          標準化的 SD 是 Data Integrity + BBS——那正是<em>日後走向零知識證明</em>的路，屆時放在同一個
+          驗證介面後面平滑升級。
+        </p>
+      </div>
+
+      <div class="decision">
+        <h3><span class="d-id">D-06</span> 資料保險箱：MyData 原檔先加密存證</h3>
+        <p>
+          僅對保險箱文件反轉「下載即銷毀」的鐵律：把 MyData 原檔加密存在裝置上當存證
+          （Application Support、Data Protection、排除備份、記 SHA-256），刪卡與「清除所有本機資料」
+          都會一併抹除。<em>國民身分證仍維持下載即銷毀</em>——它是全 app 最敏感的物件，沒人要求保留。
+        </p>
+      </div>
+
+      <div class="decision">
+        <h3><span class="d-id">D-07</span> 健保卡不排進近期里程碑，列為觀察</h3>
+        <p>
+          評估四條路皆不通：<em>實體健保卡</em>是接觸式 IC 卡、無 NFC 天線，iPhone 物理上讀不到；
+          <em>MyData</em> 只給投保／保費紀錄、沒有卡；<em>健保快易通／健康存摺 SDK</em> 給的是健康
+          <strong>資料</strong>、不是可就醫的卡；<em>TWDIW 健保卡憑證</em>目前根本還沒發行
+          （moda 2026 路線圖是駕照／大學畢業證書／技術士證／工商憑證）。觸發點到位
+          （moda 公布健保卡憑證模板、就醫端 verifier 生態出現）再啟動——屆時因 app 已打通 TWDIW
+          領卡，會是最順的接入點。
         </p>
       </div>
 
