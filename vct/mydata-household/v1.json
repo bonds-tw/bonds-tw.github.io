@@ -1,0 +1,207 @@
+{
+  "vct": "https://bonds-tw.github.io/vct/mydata-household/v1.json",
+  "name": "MyData 戶籍資料衍生憑證",
+  "description": "由持有人從戶政「現戶全戶戶籍資料」原檔衍生的述詞憑證。只回答戶籍是否在某縣市、是否設籍滿某月數。",
+  "display": [
+    {
+      "lang": "zh-Hant",
+      "name": "MyData 戶籍資料衍生憑證",
+      "description": "由持有人從戶政「現戶全戶戶籍資料」原檔衍生的述詞憑證。只回答戶籍是否在某縣市、是否設籍滿某月數。"
+    },
+    {
+      "lang": "en",
+      "name": "MyData household registration (holder-derived)"
+    }
+  ],
+  "claims": [
+    {
+      "path": [
+        "registered_in_city"
+      ],
+      "sd": "allowed",
+      "display": [
+        {
+          "lang": "zh-Hant",
+          "label": "戶籍在指定縣市"
+        },
+        {
+          "lang": "en",
+          "label": "Registered in the asked city"
+        }
+      ],
+      "description": "\"true\" when the household city equals rule.params.city (臺/台 normalised)"
+    },
+    {
+      "path": [
+        "registered_at_least_months"
+      ],
+      "sd": "allowed",
+      "display": [
+        {
+          "lang": "zh-Hant",
+          "label": "設籍已滿指定月數"
+        },
+        {
+          "lang": "en",
+          "label": "Registered for at least the asked months"
+        }
+      ],
+      "description": "Present only when rule.params.min_months is given and the original carries a registration date"
+    },
+    {
+      "path": [
+        "source"
+      ],
+      "sd": "never",
+      "display": [
+        {
+          "lang": "zh-Hant",
+          "label": "來源文件"
+        },
+        {
+          "lang": "en",
+          "label": "Source document"
+        }
+      ],
+      "description": "kind=mydata-downloaded-document, sha256 of the stored original (lowercase hex), document_type, parser version"
+    },
+    {
+      "path": [
+        "rule"
+      ],
+      "sd": "never",
+      "display": [
+        {
+          "lang": "zh-Hant",
+          "label": "查驗方的問題"
+        },
+        {
+          "lang": "en",
+          "label": "Verifier's rule"
+        }
+      ],
+      "description": "The rule (id + params) the predicate claims were evaluated against. Copied verbatim from the verifier's signed request (bonds_rule)."
+    },
+    {
+      "path": [
+        "assurance"
+      ],
+      "sd": "never",
+      "display": [
+        {
+          "lang": "zh-Hant",
+          "label": "信任等級"
+        },
+        {
+          "lang": "en",
+          "label": "Assurance"
+        }
+      ],
+      "description": "Always holder-derived: the holder's wallet computed and signed these claims from a MyData original. No agency signature is asserted."
+    }
+  ],
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "vct": {
+        "type": "string"
+      },
+      "iss": {
+        "type": "string",
+        "pattern": "^did:key:"
+      },
+      "cnf": {
+        "type": "object"
+      },
+      "source": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "const": "mydata-downloaded-document"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "document_type": {
+            "type": "string"
+          },
+          "parser": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "sha256",
+          "document_type",
+          "parser"
+        ]
+      },
+      "rule": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "params": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "params"
+        ]
+      },
+      "assurance": {
+        "const": "holder-derived"
+      },
+      "registered_in_city": {
+        "type": "string",
+        "enum": [
+          "true",
+          "false"
+        ]
+      },
+      "registered_at_least_months": {
+        "type": "string",
+        "enum": [
+          "true",
+          "false"
+        ]
+      }
+    },
+    "required": [
+      "vct",
+      "iss",
+      "cnf",
+      "source",
+      "rule",
+      "assurance",
+      "registered_in_city"
+    ]
+  },
+  "x-bonds": {
+    "issuer": "The holder's wallet (有備而來 / Bonds), with an ephemeral P-256 key that is both iss and cnf.",
+    "minted": "At presentation time, per verifier request; not stored. Valid 10 minutes.",
+    "rules": {
+      "household-city/v1": {
+        "params": {
+          "city": "Taiwan city/county name",
+          "min_months": "optional whole number"
+        },
+        "answers": [
+          "registered_in_city",
+          "registered_at_least_months"
+        ]
+      }
+    },
+    "parsers": [
+      "household-pdf/v1"
+    ],
+    "reference": "https://github.com/bonds-tw/backupTW-iOS/blob/main/docs/mydata-sd-jwt-vc-plan.md"
+  }
+}

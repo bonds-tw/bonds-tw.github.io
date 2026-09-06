@@ -1,0 +1,227 @@
+{
+  "vct": "https://bonds-tw.github.io/vct/mydata-income/v1.json",
+  "name": "MyData 個人所得資料衍生憑證",
+  "description": "由持有人從財政部「個人所得資料」原檔衍生的述詞憑證。只回答某年度所得是否在查驗方設定的上限內。",
+  "display": [
+    {
+      "lang": "zh-Hant",
+      "name": "MyData 個人所得資料衍生憑證",
+      "description": "由持有人從財政部「個人所得資料」原檔衍生的述詞憑證。只回答某年度所得是否在查驗方設定的上限內。"
+    },
+    {
+      "lang": "en",
+      "name": "MyData income statement (holder-derived)"
+    }
+  ],
+  "claims": [
+    {
+      "path": [
+        "tax_year"
+      ],
+      "sd": "allowed",
+      "display": [
+        {
+          "lang": "zh-Hant",
+          "label": "所得年度"
+        },
+        {
+          "lang": "en",
+          "label": "Tax year"
+        }
+      ],
+      "description": "Gregorian year, e.g. 2024"
+    },
+    {
+      "path": [
+        "payer_count"
+      ],
+      "sd": "allowed",
+      "display": [
+        {
+          "lang": "zh-Hant",
+          "label": "所得來源數"
+        },
+        {
+          "lang": "en",
+          "label": "Number of income sources"
+        }
+      ]
+    },
+    {
+      "path": [
+        "income_within_ceiling"
+      ],
+      "sd": "allowed",
+      "display": [
+        {
+          "lang": "zh-Hant",
+          "label": "所得在上限內"
+        },
+        {
+          "lang": "en",
+          "label": "Income within ceiling"
+        }
+      ],
+      "description": "\"true\" when the year's total 給付總額 ≤ rule.params.ceiling_twd"
+    },
+    {
+      "path": [
+        "source"
+      ],
+      "sd": "never",
+      "display": [
+        {
+          "lang": "zh-Hant",
+          "label": "來源文件"
+        },
+        {
+          "lang": "en",
+          "label": "Source document"
+        }
+      ],
+      "description": "kind=mydata-downloaded-document, sha256 of the stored original (lowercase hex), document_type, parser version"
+    },
+    {
+      "path": [
+        "rule"
+      ],
+      "sd": "never",
+      "display": [
+        {
+          "lang": "zh-Hant",
+          "label": "查驗方的問題"
+        },
+        {
+          "lang": "en",
+          "label": "Verifier's rule"
+        }
+      ],
+      "description": "The rule (id + params) the predicate claims were evaluated against. Copied verbatim from the verifier's signed request (bonds_rule)."
+    },
+    {
+      "path": [
+        "assurance"
+      ],
+      "sd": "never",
+      "display": [
+        {
+          "lang": "zh-Hant",
+          "label": "信任等級"
+        },
+        {
+          "lang": "en",
+          "label": "Assurance"
+        }
+      ],
+      "description": "Always holder-derived: the holder's wallet computed and signed these claims from a MyData original. No agency signature is asserted."
+    }
+  ],
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "vct": {
+        "type": "string"
+      },
+      "iss": {
+        "type": "string",
+        "pattern": "^did:key:"
+      },
+      "cnf": {
+        "type": "object"
+      },
+      "source": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "const": "mydata-downloaded-document"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "document_type": {
+            "type": "string"
+          },
+          "parser": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "sha256",
+          "document_type",
+          "parser"
+        ]
+      },
+      "rule": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "params": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "params"
+        ]
+      },
+      "assurance": {
+        "const": "holder-derived"
+      },
+      "tax_year": {
+        "type": "string",
+        "pattern": "^[0-9]{4}$"
+      },
+      "payer_count": {
+        "type": "string",
+        "pattern": "^[0-9]+$"
+      },
+      "income_within_ceiling": {
+        "type": "string",
+        "enum": [
+          "true",
+          "false"
+        ]
+      }
+    },
+    "required": [
+      "vct",
+      "iss",
+      "cnf",
+      "source",
+      "rule",
+      "assurance",
+      "tax_year",
+      "payer_count",
+      "income_within_ceiling"
+    ]
+  },
+  "x-bonds": {
+    "issuer": "The holder's wallet (有備而來 / Bonds), with an ephemeral P-256 key that is both iss and cnf.",
+    "minted": "At presentation time, per verifier request; not stored. Valid 10 minutes.",
+    "rules": {
+      "income-ceiling/v1": {
+        "params": {
+          "tax_year": "Gregorian year (4 digits)",
+          "ceiling_twd": "whole NTD"
+        },
+        "answers": [
+          "tax_year",
+          "payer_count",
+          "income_within_ceiling"
+        ]
+      }
+    },
+    "parsers": [
+      "income-pdf/v1"
+    ],
+    "reference": "https://github.com/bonds-tw/backupTW-iOS/blob/main/docs/mydata-sd-jwt-vc-plan.md"
+  }
+}

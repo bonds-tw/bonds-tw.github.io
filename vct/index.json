@@ -1,0 +1,12 @@
+{
+  "types": [
+    "https://bonds-tw.github.io/vct/mydata-income/v1.json",
+    "https://bonds-tw.github.io/vct/mydata-labor-insurance/v1.json",
+    "https://bonds-tw.github.io/vct/mydata-household/v1.json"
+  ],
+  "integrity": {
+    "mydata-income": "sha256-UWf/U6jOpKCHfZxeIMTh0snMIglSOjDdxy76cI/BENA=",
+    "mydata-labor-insurance": "sha256-qtCc76IWmYLsuHXKYGXmHL00MI4vjKWvSwuzjWKEXPs=",
+    "mydata-household": "sha256-d8lnX7PMXJyryDSHYcHYPEa9TlKEZX9DUgRWJ9jSEk0="
+  }
+}

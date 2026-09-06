@@ -1,0 +1,204 @@
+{
+  "vct": "https://bonds-tw.github.io/vct/mydata-labor-insurance/v1.json",
+  "name": "MyData 勞保投保資料衍生憑證",
+  "description": "由持有人從勞保局「被保險人投保資料」原檔衍生的述詞憑證。只回答某一天是否有有效投保。",
+  "display": [
+    {
+      "lang": "zh-Hant",
+      "name": "MyData 勞保投保資料衍生憑證",
+      "description": "由持有人從勞保局「被保險人投保資料」原檔衍生的述詞憑證。只回答某一天是否有有效投保。"
+    },
+    {
+      "lang": "en",
+      "name": "MyData labour-insurance record (holder-derived)"
+    }
+  ],
+  "claims": [
+    {
+      "path": [
+        "on_date"
+      ],
+      "sd": "allowed",
+      "display": [
+        {
+          "lang": "zh-Hant",
+          "label": "查詢日期"
+        },
+        {
+          "lang": "en",
+          "label": "Date checked"
+        }
+      ],
+      "description": "ISO yyyy-mm-dd, copied from rule.params.on_date"
+    },
+    {
+      "path": [
+        "insured_on_date"
+      ],
+      "sd": "allowed",
+      "display": [
+        {
+          "lang": "zh-Hant",
+          "label": "當天有勞保"
+        },
+        {
+          "lang": "en",
+          "label": "Insured on that date"
+        }
+      ],
+      "description": "\"true\" when some insured period covers on_date"
+    },
+    {
+      "path": [
+        "source"
+      ],
+      "sd": "never",
+      "display": [
+        {
+          "lang": "zh-Hant",
+          "label": "來源文件"
+        },
+        {
+          "lang": "en",
+          "label": "Source document"
+        }
+      ],
+      "description": "kind=mydata-downloaded-document, sha256 of the stored original (lowercase hex), document_type, parser version"
+    },
+    {
+      "path": [
+        "rule"
+      ],
+      "sd": "never",
+      "display": [
+        {
+          "lang": "zh-Hant",
+          "label": "查驗方的問題"
+        },
+        {
+          "lang": "en",
+          "label": "Verifier's rule"
+        }
+      ],
+      "description": "The rule (id + params) the predicate claims were evaluated against. Copied verbatim from the verifier's signed request (bonds_rule)."
+    },
+    {
+      "path": [
+        "assurance"
+      ],
+      "sd": "never",
+      "display": [
+        {
+          "lang": "zh-Hant",
+          "label": "信任等級"
+        },
+        {
+          "lang": "en",
+          "label": "Assurance"
+        }
+      ],
+      "description": "Always holder-derived: the holder's wallet computed and signed these claims from a MyData original. No agency signature is asserted."
+    }
+  ],
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "vct": {
+        "type": "string"
+      },
+      "iss": {
+        "type": "string",
+        "pattern": "^did:key:"
+      },
+      "cnf": {
+        "type": "object"
+      },
+      "source": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "const": "mydata-downloaded-document"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "document_type": {
+            "type": "string"
+          },
+          "parser": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "sha256",
+          "document_type",
+          "parser"
+        ]
+      },
+      "rule": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "params": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "params"
+        ]
+      },
+      "assurance": {
+        "const": "holder-derived"
+      },
+      "on_date": {
+        "type": "string",
+        "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+      },
+      "insured_on_date": {
+        "type": "string",
+        "enum": [
+          "true",
+          "false"
+        ]
+      }
+    },
+    "required": [
+      "vct",
+      "iss",
+      "cnf",
+      "source",
+      "rule",
+      "assurance",
+      "on_date",
+      "insured_on_date"
+    ]
+  },
+  "x-bonds": {
+    "issuer": "The holder's wallet (有備而來 / Bonds), with an ephemeral P-256 key that is both iss and cnf.",
+    "minted": "At presentation time, per verifier request; not stored. Valid 10 minutes.",
+    "rules": {
+      "insurance-active/v1": {
+        "params": {
+          "on_date": "ISO date"
+        },
+        "answers": [
+          "on_date",
+          "insured_on_date"
+        ]
+      }
+    },
+    "parsers": [
+      "labor-insurance-pdf/v1"
+    ],
+    "reference": "https://github.com/bonds-tw/backupTW-iOS/blob/main/docs/mydata-sd-jwt-vc-plan.md"
+  }
+}
