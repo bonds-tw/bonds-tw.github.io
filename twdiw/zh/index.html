@@ -645,11 +645,12 @@ pre.tokens code { white-space: pre-wrap; word-break: break-all; }
 
   <main id="main-content" tabindex="-1">
     <section class="project-status" aria-labelledby="implementation-status">
-      <h2 id="implementation-status">目前實作狀態 <small>· 2026-08-30 更新</small></h2>
+      <h2 id="implementation-status">目前實作狀態 <small>· 2026-09-08 更新</small></h2>
       <p>底下的實作筆記仍是一份分級標示證據的紀錄；這裡只放皮夾現在真的做到哪。完整施工紀錄在<a href="/roadmap/">工程藍圖</a>。</p>
       <dl class="status-grid">
         <div><dt>已完成 · 領卡</dt><dd><strong>真實政府卡端到端領下來了</strong>：交通部公路局的駕照電子卡走完整 OID4VCI 入庫顯示。<code>token</code> 400 的關卡已解——眉角是端點以 <code>client_id=moda_dw</code> 成對查 <code>pre-authorized_code</code>；送 app 自己的 bundle id 會 <code>not found</code>。</dd></div>
         <div><dt>已完成 · 出示</dt><dd><strong>M5.4 OID4VP 出示端到端通過</strong>：同一張真卡選擇性揭露，先對官方 demo 驗證方通過，再對本專案獨立自建的 verifier（<code>verifier.mashbean.net</code>，Cloudflare Workers）跨裝置驗證通過。</dd></div>
+        <div><dt>已完成 · 自建發卡端</dt><dd><strong>姊妹專案「請收下卡片」已上線</strong>：<code>issuer.mashbean.net</code>（Cloudflare Workers）發行 TWDIW 方言的測試卡，供皮夾領卡與出示回驗；卡片皆為虛構資料、不在官方信任清單上。有備而來 DEBUG 建置以沙盒例外釘住其 <code>did:key</code>，Release 不含。</dd></div>
         <div><dt>下一個閘門</dt><dd>資料保險箱：MyData 七份文件（所得／勞保／健保／納稅／勞退／地籍／戶籍謄本）路徑已配好、可在 app 內直抓，非身分證文件的欄位解析待見到真實資料逐份寫。</dd></div>
         <div><dt>需要決定</dt><dd>任何表單提交或條款接受，都由使用者決定後才進行。</dd></div>
       </dl>
