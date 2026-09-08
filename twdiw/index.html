@@ -649,11 +649,12 @@ pre.tokens code { white-space: pre-wrap; word-break: break-all; }
 
   <main id="main-content" tabindex="-1">
     <section class="project-status" aria-labelledby="implementation-status">
-      <h2 id="implementation-status">Implementation status <small>· updated 2026-08-30</small></h2>
+      <h2 id="implementation-status">Implementation status <small>· updated 2026-09-08</small></h2>
       <p>The field notes below remain an evidence-graded record. This compact status shows where the wallet implementation actually stands; the <a href="/roadmap/">engineering roadmap</a> carries the full working log.</p>
       <dl class="status-grid">
         <div><dt>Completed · collection</dt><dd><strong>A real government card was collected end-to-end</strong>: the 交通部公路局 driving-licence card ran the full OID4VCI flow into the store. The token 400 is solved — the endpoint pairs <code>pre-authorized_code</code> with <code>client_id=moda_dw</code>; sending the app's own bundle id returns <code>not found</code>.</dd></div>
         <div><dt>Completed · presentation</dt><dd><strong>M5.4 OID4VP presentation verified end-to-end</strong>: the same real card, selectively disclosed, passed against the official demo verifier and against this project's own independent verifier (<code>verifier.mashbean.net</code>, Cloudflare Workers) across devices.</dd></div>
+        <div><dt>Completed · self-hosted issuer</dt><dd><strong>The sister test-card issuer is live</strong>: <code>issuer.mashbean.net</code> (Cloudflare Workers) issues TWDIW-dialect test cards for a wallet to collect and present back; every card is fictitious data and not on the official trust list. Bonds Debug builds pin its <code>did:key</code> as a sandbox exception; Release builds do not.</dd></div>
         <div><dt>Next gate</dt><dd>The data vault: the seven MyData documents (income / labour insurance / NHI / tax / labour pension / land / household record) have their real item paths wired and fetch in-app; per-document field parsing awaits real data for the non-ID documents.</dd></div>
         <div><dt>Decision needed</dt><dd>The user must decide before any form is submitted or any terms are accepted.</dd></div>
       </dl>
